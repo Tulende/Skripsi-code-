@@ -164,59 +164,132 @@ def get_rating_level_cobit(pct):
 
 def generate_pdf_report(evaluator_name, evaluator_pos, capability_data_list):
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
     story = []
     
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=15, alignment=1, spaceAfter=15)
-    subtitle_style = ParagraphStyle('SubTitleStyle', parent=styles['Heading2'], fontSize=11, spaceAfter=8)
-    normal_style = styles['Normal']
     
-    story.append(Paragraph("LAPORAN AUDIT TATA KELOLA TI COBIT 2019", title_style))
-    story.append(Paragraph("<b>Universitas Klabat (UNKLAB)</b>", ParagraphStyle('Center', parent=styles['Normal'], alignment=1, fontSize=11)))
-    story.append(Spacer(1, 12))
+    cobit_navy = colors.HexColor('#0B192C')
+    cobit_blue = colors.HexColor('#1E3A8A')
+    cobit_gold = colors.HexColor('#D97706')
+    slate_bg = colors.HexColor('#F8FAFC')
+    border_grey = colors.HexColor('#CBD5E1')
+    
+    title_style = ParagraphStyle(
+        'CobitTitle', 
+        parent=styles['Heading1'], 
+        fontSize=15, 
+        alignment=1, 
+        textColor=cobit_navy,
+        fontName='Helvetica-Bold',
+        spaceAfter=4
+    )
+    subtitle_style = ParagraphStyle(
+        'CobitSubtitle', 
+        parent=styles['Normal'], 
+        alignment=1, 
+        fontSize=10.5, 
+        textColor=cobit_blue,
+        fontName='Helvetica-Bold',
+        spaceAfter=14
+    )
+    section_heading = ParagraphStyle(
+        'SectionHeading', 
+        parent=styles['Heading2'], 
+        fontSize=10, 
+        textColor=cobit_navy, 
+        fontName='Helvetica-Bold',
+        spaceBefore=10,
+        spaceAfter=6
+    )
+    normal_style = ParagraphStyle(
+        'NormalStyle',
+        parent=styles['Normal'],
+        fontSize=8.5,
+        leading=12,
+        textColor=colors.HexColor('#1E293B')
+    )
+    
+    story.append(Paragraph("LAPORAN RESMI AUDIT TATA KELOLA TEKNOLOGI INFORMASI", title_style))
+    story.append(Paragraph("ISACA COBIT 2019 & FUZZY MULTI-CRITERIA &bull; UNIVERSITAS KLABAT", subtitle_style))
+    story.append(Spacer(1, 4))
     
     info_data = [
-        ["Evaluator / Auditor:", evaluator_name, "Tanggal Audit:", datetime.now().strftime("%Y-%m-%d %H:%M")],
-        ["Jabatan / Unit:", evaluator_pos, "Metode:", "Fuzzy TFN & Direct Percentage"]
+        ["Lead Evaluator / Auditor:", evaluator_name, "Tanggal Dokumen:", datetime.now().strftime("%d %B %Y, %H:%M WITA")],
+        ["Jabatan / Unit Kerja:", evaluator_pos, "Metodologi:", "Triangular Fuzzy Number (TFN) & Agregasi Langsung"]
     ]
-    t_info = Table(info_data, colWidths=[110, 170, 90, 170])
+    t_info = Table(info_data, colWidths=[120, 160, 100, 160])
     t_info.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), colors.whitesmoke),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.lightgrey),
-        ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0,0), (-1,-1), slate_bg),
+        ('GRID', (0,0), (-1,-1), 0.5, border_grey),
+        ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
+        ('FONTNAME', (2,0), (2,-1), 'Helvetica-Bold'),
         ('FONTSIZE', (0,0), (-1,-1), 8),
+        ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor('#0F172A')),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
     ]))
     story.append(t_info)
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 12))
     
-    story.append(Paragraph("<b>Hasil Evaluasi Capability Level (4 Domain Prioritas)</b>", subtitle_style))
-    table_headers = [["Domain COBIT", "As-Is", "To-Be", "Gap", "% Pencapaian", "Rating Scale"]]
+    story.append(Paragraph("<b>I. Evaluasi Tingkat Kemampuan (Capability Level) & Analisis Kesenjangan (Gap)</b>", section_heading))
+    table_headers = [["Domain Prioritas", "Level As-Is", "Target To-Be", "Gap", "% Capaian", "Rating Scale COBIT"]]
+    
     for item in capability_data_list:
-        table_headers.append([item['domain'], f"Level {item['as_is']}", f"Level {item['to_be']}", f"{item['gap']} Level", f"{item['pct']:.1f}%", item['rating']])
+        table_headers.append([
+            item['domain'], 
+            f"Level {item['as_is']}", 
+            f"Level {item['to_be']}", 
+            f"{item['gap']} Level", 
+            f"{item['pct']:.1f}%", 
+            item['rating']
+        ])
         
-    t_cap = Table(table_headers, colWidths=[170, 60, 60, 60, 85, 105])
+    t_cap = Table(table_headers, colWidths=[160, 65, 65, 60, 75, 115])
     t_cap.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.navy),
+        ('BACKGROUND', (0,0), (-1,0), cobit_navy),
         ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('ALIGN', (0,1), (0,-1), 'LEFT'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,0), (-1,-1), 8),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('FONTSIZE', (0,0), (-1,-1), 7.5),
+        ('GRID', (0,0), (-1,-1), 0.5, border_grey),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, slate_bg]),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
     ]))
     story.append(t_cap)
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 14))
     
-    story.append(Paragraph("<b>Rekomendasi Utama Perbaikan Tata Kelola TI:</b>", subtitle_style))
+    story.append(Paragraph("<b>II. Rekomendasi Strategis Perbaikan Tata Kelola TI:</b>", section_heading))
     recoms = [
-        "1. <b>APO12 (Managed Risk):</b> Menyusun dokumen formal Manajemen Risiko TI dan SOP mitigasi.",
-        "2. <b>APO13 (Managed Security):</b> Membentuk unit pengawas keamanan khusus dan menerapkan ISMS formal.",
-        "3. <b>DSS05 (Security Services):</b> Menetapkan SOP penanganan dokumen rahasia dan audit log berkala.",
-        "4. <b>MEA03 (Compliance):</b> Membuat register kepatuhan terpusat untuk memantau regulasi Kemendikbud."
+        "1. <b>APO12 (Managed Risk):</b> Memformalkan dokumen Kebijakan Manajemen Risiko TI dan menyusun Register Risiko berkala di lingkungan Universitas Klabat.",
+        "2. <b>APO13 (Managed Security):</b> Mengembangkan Kebijakan Sistem Manajemen Keamanan Informasi (SMKI) dan menetapkan tim tanggap insiden siber kampus.",
+        "3. <b>DSS05 (Security Services):</b> Menetapkan SOP penanganan akses dan kerahasiaan data mahasiswa/dosen serta melaksanakan audit log secara periodik.",
+        "4. <b>MEA03 (Managed Compliance):</b> Membentuk matriks kepatuhan terpadu untuk memastikan keselarasan terhadap regulasi Kemendikbudristek dan UU PDP."
     ]
     for rec in recoms:
         story.append(Paragraph(rec, normal_style))
-        story.append(Spacer(1, 3))
+        story.append(Spacer(1, 4))
+        
+    story.append(Spacer(1, 18))
+    
+    # Signature / Legal Block
+    sig_data = [
+        ["Diverifikasi oleh:", "Disetujui oleh:"],
+        ["\n\n\n__________________________", "\n\n\n__________________________"],
+        [f"<b>{evaluator_name}</b>", "<b>Pimpinan / Direktur SIU UNKLAB</b>"],
+        [evaluator_pos, "Universitas Klabat"]
+    ]
+    t_sig = Table(sig_data, colWidths=[270, 270])
+    t_sig.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTSIZE', (0,0), (-1,-1), 8),
+        ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor('#334155')),
+        ('TOPPADDING', (0,0), (-1,-1), 2),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+    ]))
+    story.append(t_sig)
         
     doc.build(story)
     buffer.seek(0)

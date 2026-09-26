@@ -21,7 +21,7 @@ init_db()
 # ==========================================
 st.set_page_config(
     page_title="COBIT 2019 Governance & Fuzzy Logic - UNKLAB",
-    page_icon="🏛️",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="auto"
 )
@@ -375,7 +375,7 @@ if not st.session_state.authenticated:
     st.markdown("""
     <div class="cobit-hero-header" style="text-align: center; margin-top: 10px;">
         <div class="cobit-badge-ribbon" style="justify-content: center;">
-            <span>🏛️ ISACA COBIT 2019 & FUZZY LOGIC ENGINE</span>
+            <span> ISACA COBIT 2019 & FUZZY LOGIC ENGINE</span>
         </div>
         <h1 class="cobit-title">Sistem Evaluasi Tata Kelola TI</h1>
         <p class="cobit-subtitle" style="justify-content: center;">
@@ -400,7 +400,7 @@ if not st.session_state.authenticated:
             </div>
         """, unsafe_allow_html=True)
         
-        tab_login, tab_register = st.tabs(["🔑 Masuk (Sign In)", "📝 Daftar Akun Baru"])
+        tab_login, tab_register = st.tabs(["🔑 Masuk (Sign In)", "Daftar Akun Baru"])
         
         with tab_login:
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
@@ -450,7 +450,7 @@ if not st.session_state.authenticated:
         
         st.markdown("""
         <div style="text-align: center; color: #64748B; font-size: 0.75rem; margin-top: 8px;">
-            <span>🛡️ Enkripsi Kata Sandi SHA-256</span> • <span>Algoritma Agregasi TFN Defuzzifikasi</span>
+            <span>Enkripsi Kata Sandi SHA-256</span> • <span>Algoritma Agregasi TFN Defuzzifikasi</span>
         </div>
         """, unsafe_allow_html=True)
         
@@ -500,14 +500,14 @@ st.sidebar.markdown("---")
 
 st.sidebar.markdown("""
 <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; font-size:0.75rem; color:#475569;">
-    <strong style="color:#0F172A;">📐 Landasan Analisis:</strong><br>
+    <strong style="color:#0F172A;"> Landasan Analisis:</strong><br>
     • <b>COBIT 2019:</b> 10 Design Factors & 4 Domain Prioritas UNKLAB (APO12, APO13, DSS05, MEA03).<br>
     • <b>Fuzzy Logic:</b> Triangular Fuzzy Number (TFN) & Bobot Defuzzifikasi Rata-Rata ($z^*$).
 </div>
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
-if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
+if st.sidebar.button(" Keluar / Logout", use_container_width=True):
     st.session_state.authenticated = False
     st.session_state.user_info = None
     st.session_state.calculated_results = {}
@@ -517,7 +517,7 @@ if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True):
 st.markdown("""
 <div class="cobit-hero-header">
     <div class="cobit-badge-ribbon">
-        <span>🏛️ ISACA COBIT 2019</span>
+        <span> ISACA COBIT 2019</span>
         <span>•</span>
         <span>UNIVERSITAS KLABAT</span>
     </div>
@@ -541,19 +541,19 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
     </div>
     """, unsafe_allow_html=True)
     
-    with st.expander("👤 Identitas Penilai & Metadata Audit", expanded=True):
+    with st.expander(" Identitas Penilai & Metadata Audit", expanded=True):
         col_resp_a, col_resp_b = st.columns(2)
         resp_name = col_resp_a.text_input("Nama Penilai / Lead Auditor:", value=user_p['fullname'])
         resp_pos = col_resp_b.text_input("Jabatan / Unit Kerja Evaluasi:", value=user_p['position'])
 
-    tab_labels = [f"📊 {code}" for code in df_definitions.keys()]
+    tab_labels = [f"{code}" for code in df_definitions.keys()]
     tabs = st.tabs(tab_labels)
     temp_results = {}
 
     for idx, (df_code, df_info) in enumerate(df_definitions.items()):
         with tabs[idx]:
             is_fuzzy = (df_info["type"] == "fuzzy")
-            method_badge = "📐 Fuzzy TFN" if is_fuzzy else "📈 Direct Percentage"
+            method_badge = "Fuzzy TFN" if is_fuzzy else "Direct Percentage"
             scale_badge = f"Skala 1-{df_info['scale']}" if is_fuzzy else "Skala 0-100%"
             
             st.markdown(f"""
@@ -579,7 +579,7 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
             with col_r1:
                 st.markdown("""
                 <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-                    <strong style="color:#1E3A8A; font-size:0.85rem;">👤 Responden 1 (Cth: Douglas Rasuh)</strong>
+                    <strong style="color:#1E3A8A; font-size:0.85rem;"> Responden 1 (Cth: Douglas Rasuh)</strong>
                 </div>
                 """, unsafe_allow_html=True)
                 for i, item in enumerate(items):
@@ -624,21 +624,21 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
     st.markdown("<br>", unsafe_allow_html=True)
     col_save, col_info_box = st.columns([1.2, 2])
     with col_save:
-        if st.button("💾 Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
+        if st.button(" Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
             if resp_name.strip() == "":
                 st.error("Silakan isi nama penilai terlebih dahulu.")
             else:
                 r_id = save_respondent_data(resp_name, resp_pos, temp_results)
-                st.success(f"✅ Penilaian berhasil direkam ke database dengan Respondent ID #{r_id}!")
+                st.success(f"Penilaian berhasil direkam ke database dengan Respondent ID #{r_id}!")
     with col_info_box:
-        st.info("💡 Data yang dihitung secara *live* di atas langsung tersedia di menu **Visualisasi & Rekapitulasi**.")
+        st.info(" Data yang dihitung secara *live* di atas langsung tersedia di menu **Visualisasi & Rekapitulasi**.")
 
 # ----------------------------------------------------
 # MODUL 2: REKAPITULASI & VISUALISASI DESIGN FACTOR
 # ----------------------------------------------------
 elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
     if not is_admin:
-        st.error("⛔ Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
+        st.error(" Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
         st.stop()
         
     st.markdown("""
@@ -649,7 +649,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
     """, unsafe_allow_html=True)
     
     if not st.session_state.calculated_results:
-        st.warning("⚠️ Belum ada data penilaian aktif. Harap buka Menu 1 untuk mengisi kuesioner terlebih dahulu.")
+        st.warning(" Belum ada data penilaian aktif. Harap buka Menu 1 untuk mengisi kuesioner terlebih dahulu.")
     else:
         summary_rows = []
         fuzzy_scores = {}
@@ -761,7 +761,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
             st.markdown("""
             <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow: 0 4px 14px -2px rgba(15,23,42,0.04);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <strong style="color:#0F172A; font-size:0.95rem;">📊 Persentase DF (DF5-DF10)</strong>
+                    <strong style="color:#0F172A; font-size:0.95rem;"> Persentase DF (DF5-DF10)</strong>
                     <span style="font-size:0.72rem; background:#F0FDF4; color:#15803D; padding:2px 7px; border-radius:4px; font-weight:600;">Skala 0 - 100%</span>
                 </div>
             """, unsafe_allow_html=True)
@@ -795,7 +795,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'>📋 Tabel Detail Agregasi 10 Design Factors</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'> Tabel Detail Agregasi 10 Design Factors</h3>", unsafe_allow_html=True)
         st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
 
 # ----------------------------------------------------
@@ -803,7 +803,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
 # ----------------------------------------------------
 elif menu == "3. Riwayat Responden & Database":
     if not is_admin:
-        st.error("⛔ Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
+        st.error(" Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
         st.stop()
         
     st.markdown("""
@@ -819,11 +819,11 @@ elif menu == "3. Riwayat Responden & Database":
     df_cap_history = pd.read_sql_query("SELECT id, domain_code, as_is_level, to_be_level, gap, achievement_pct, rating_scale, created_at FROM capability_assessments ORDER BY id DESC", conn)
     conn.close()
     
-    tab_db1, tab_db2, tab_db3 = st.tabs(["👥 Riwayat Responden", "🛡️ Akun Auditor", "📈 Riwayat Kapabilitas"])
+    tab_db1, tab_db2, tab_db3 = st.tabs(["Riwayat Responden", " Akun Auditor", " Riwayat Kapabilitas"])
     
     with tab_db1:
         if df_resps.empty:
-            st.info("ℹ️ Belum ada data responden yang tersimpan di basis data.")
+            st.info("Belum ada data responden yang tersimpan di basis data.")
         else:
             st.dataframe(df_resps, use_container_width=True)
             
@@ -832,7 +832,7 @@ elif menu == "3. Riwayat Responden & Database":
         
     with tab_db3:
         if df_cap_history.empty:
-            st.info("ℹ️ Belum ada riwayat evaluasi capability level di database.")
+            st.info("Belum ada riwayat evaluasi capability level di database.")
         else:
             st.dataframe(df_cap_history, use_container_width=True)
 
@@ -847,24 +847,24 @@ elif menu == "4. Capability Level & Export PDF":
     </div>
     """, unsafe_allow_html=True)
     
-    with st.expander("📝 Metadata Evaluator / Lead Auditor", expanded=True):
+    with st.expander("Metadata Evaluator / Lead Auditor", expanded=True):
         col_e1, col_e2 = st.columns(2)
         eval_name = col_e1.text_input("Nama Lead Evaluator:", value=user_p['fullname'])
         eval_pos = col_e2.text_input("Jabatan Evaluator:", value=user_p['position'])
     
     st.markdown("""
     <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:16px 18px; margin-bottom:16px;">
-        <h3 style="margin:0 0 4px 0; font-size:1.05rem; font-weight:700; color:#0F172A;">🎛️ Input Persentase Pencapaian (4 Domain Prioritas UNKLAB)</h3>
+        <h3 style="margin:0 0 4px 0; font-size:1.05rem; font-weight:700; color:#0F172A;"> Input Persentase Pencapaian (4 Domain Prioritas UNKLAB)</h3>
         <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Geser slider untuk menentukan persentase pemenuhan pada masing-masing domain audit</p>
     """, unsafe_allow_html=True)
     
     col_cap1, col_cap2 = st.columns(2)
     with col_cap1:
-        p_apo12 = st.slider("📌 APO12 — Managed Risk (%)", 0, 100, 8, help="Manajemen Risiko TI Institusi")
-        p_apo13 = st.slider("📌 APO13 — Managed Security (%)", 0, 100, 42, help="Sistem Manajemen Keamanan Informasi")
+        p_apo12 = st.slider(" APO12 — Managed Risk (%)", 0, 100, 8, help="Manajemen Risiko TI Institusi")
+        p_apo13 = st.slider(" APO13 — Managed Security (%)", 0, 100, 42, help="Sistem Manajemen Keamanan Informasi")
     with col_cap2:
-        p_dss05 = st.slider("📌 DSS05 — Security Services (%)", 0, 100, 75, help="Operasional Layanan Keamanan Jaringan & Data")
-        p_mea03 = st.slider("📌 MEA03 — Managed Compliance (%)", 0, 100, 31, help="Kepatuhan terhadap Regulasi Eksternal & Internal")
+        p_dss05 = st.slider(" DSS05 — Security Services (%)", 0, 100, 75, help="Operasional Layanan Keamanan Jaringan & Data")
+        p_mea03 = st.slider(" MEA03 — Managed Compliance (%)", 0, 100, 31, help="Kepatuhan terhadap Regulasi Eksternal & Internal")
         
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -894,7 +894,7 @@ elif menu == "4. Capability Level & Export PDF":
         st.markdown("""
         <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow: 0 4px 14px -2px rgba(15,23,42,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <strong style="color:#0F172A; font-size:0.95rem;">📊 Tingkat Kapabilitas: As-Is vs To-Be</strong>
+                <strong style="color:#0F172A; font-size:0.95rem;"> Tingkat Kapabilitas: As-Is vs To-Be</strong>
                 <span style="font-size:0.72rem; background:#FEF3C7; color:#92400E; padding:2px 7px; border-radius:4px; font-weight:600;">Target: Level 3</span>
             </div>
         """, unsafe_allow_html=True)
@@ -931,7 +931,7 @@ elif menu == "4. Capability Level & Export PDF":
         st.markdown("""
         <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow: 0 4px 14px -2px rgba(15,23,42,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <strong style="color:#0F172A; font-size:0.95rem;">🍩 Capaian Proses Domain Prioritas</strong>
+                <strong style="color:#0F172A; font-size:0.95rem;"> Capaian Proses Domain Prioritas</strong>
                 <span style="font-size:0.72rem; background:#ECFDF5; color:#065F46; padding:2px 7px; border-radius:4px; font-weight:600;">Persentase (%)</span>
             </div>
         """, unsafe_allow_html=True)
@@ -966,7 +966,7 @@ elif menu == "4. Capability Level & Export PDF":
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'>📋 Tabel Evaluasi Kesenjangan (Gap Analysis)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'> Tabel Evaluasi Kesenjangan (Gap Analysis)</h3>", unsafe_allow_html=True)
     
     df_cap_display = pd.DataFrame(cap_list)
     df_cap_display.columns = ["Domain Evaluasi", "Level As-Is", "Target To-Be", "Gap (Level)", "Pencapaian (%)", "COBIT Rating Scale"]
@@ -976,15 +976,15 @@ elif menu == "4. Capability Level & Export PDF":
     col_btn_db, col_btn_pdf = st.columns(2)
     
     with col_btn_db:
-        if st.button("💾 Simpan Hasil Evaluasi ke Database SQLite", type="secondary", use_container_width=True):
+        if st.button(" Simpan Hasil Evaluasi ke Database SQLite", type="secondary", use_container_width=True):
             for item in cap_list:
                 save_capability_data(item['domain'], item['as_is'], item['to_be'], item['gap'], item['pct'], item['rating'])
-            st.success("✅ Seluruh data assessment kapabilitas berhasil direkam ke database!")
+            st.success("Seluruh data assessment kapabilitas berhasil direkam ke database!")
 
     with col_btn_pdf:
         pdf_buf = generate_pdf_report(eval_name, eval_pos, cap_list)
         st.download_button(
-            label="📄 Unduh Laporan Resmi Audit COBIT 2019 (PDF)",
+            label=" Unduh Laporan Resmi Audit COBIT 2019 (PDF)",
             data=pdf_buf, 
             file_name=f"Laporan_Audit_COBIT2019_UNKLAB_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf", 

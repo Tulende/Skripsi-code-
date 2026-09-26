@@ -134,23 +134,39 @@ def save_capability_data(domain_code, as_is, to_be, gap, pct, rating):
 
 # --- Engine Fuzzy & Percentage ---
 def get_tfn_5(skor):
-    tfn_map = {1: (0.00, 0.00, 0.25), 2: (0.00, 0.25, 0.50), 3: (0.25, 0.50, 0.75), 4: (0.50, 0.75, 1.00), 5: (0.75, 1.00, 1.00)}
+    # Selaras dengan sheet TFN_REF pada file 'perhitungan fuzzy & average.xlsx' (Skala 1-5)
+    tfn_map = {
+        1: (0.00, 0.00, 0.25), 
+        2: (0.00, 0.25, 0.50), 
+        3: (0.25, 0.50, 0.75), 
+        4: (0.50, 0.75, 1.00), 
+        5: (0.75, 1.00, 1.00)
+    }
     return tfn_map.get(skor, (0.00, 0.00, 0.00))
 
 def get_tfn_3(skor):
-    tfn_map = {1: (0.00, 0.00, 0.50), 2: (0.25, 0.50, 0.75), 3: (0.50, 1.00, 1.00)}
+    # Selaras dengan sheet TFN_REF pada file 'perhitungan fuzzy & average.xlsx' (Skala 1-3)
+    tfn_map = {
+        1: (0.00, 0.00, 0.50), 
+        2: (0.00, 0.50, 1.00), 
+        3: (0.50, 1.00, 1.00)
+    }
     return tfn_map.get(skor, (0.00, 0.00, 0.00))
 
 def calc_fuzzy_5(r1, r2):
     t1, t2 = get_tfn_5(r1), get_tfn_5(r2)
-    a_avg, b_avg, c_avg = (t1[0] + t2[0])/2.0, (t1[1] + t2[1])/2.0, (t1[2] + t2[2])/2.0
-    z_star = (a_avg + b_avg + c_avg) / 3.0
+    a_avg = round((t1[0] + t2[0]) / 2.0, 2)
+    b_avg = round((t1[1] + t2[1]) / 2.0, 2)
+    c_avg = round((t1[2] + t2[2]) / 2.0, 2)
+    z_star = round((a_avg + b_avg + c_avg) / 3.0, 2)
     return round(1 + (z_star * 4), 2)
 
 def calc_fuzzy_3(r1, r2):
     t1, t2 = get_tfn_3(r1), get_tfn_3(r2)
-    a_avg, b_avg, c_avg = (t1[0] + t2[0])/2.0, (t1[1] + t2[1])/2.0, (t1[2] + t2[2])/2.0
-    z_star = (a_avg + b_avg + c_avg) / 3.0
+    a_avg = round((t1[0] + t2[0]) / 2.0, 2)
+    b_avg = round((t1[1] + t2[1]) / 2.0, 2)
+    c_avg = round((t1[2] + t2[2]) / 2.0, 2)
+    z_star = round((a_avg + b_avg + c_avg) / 3.0, 2)
     return round(1 + (z_star * 2), 2)
 
 def calc_percentage_avg(r1_pct, r2_pct):

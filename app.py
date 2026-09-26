@@ -1019,26 +1019,33 @@ elif menu == "4. Capability Level & Export PDF":
         fig_donut, ax_donut = plt.subplots(figsize=(5.5, 4.0), dpi=150)
         fig_donut.patch.set_facecolor('#FFFFFF')
         
-        donut_colors = ['#BE123C', '#F59E0B', '#10B981', '#6366F1']
-        wedges, texts, autotexts = ax_donut.pie(
-            [x['pct'] for x in cap_list], 
-            labels=domains_short, 
-            autopct='%1.1f%%', 
-            startangle=120, 
-            colors=donut_colors, 
-            wedgeprops=dict(width=0.45, edgecolor='#FFFFFF', linewidth=2),
-            pctdistance=0.75
-        )
-        for t in texts:
-            t.set_fontsize(8.5)
-            t.set_fontweight('bold')
-            t.set_color('#0F172A')
-        for at in autotexts:
-            at.set_fontsize(7.5)
-            at.set_color('#FFFFFF')
-            at.set_fontweight('bold')
-            
-        ax_donut.text(0, 0, 'COBIT 2019\nUNKLAB', ha='center', va='center', fontsize=8.5, fontweight='bold', color='#1E3A8A')
+        pct_values = [x['pct'] for x in cap_list]
+        total_pct = sum(pct_values)
+        
+        if total_pct == 0:
+            ax_donut.pie([1], colors=['#E2E8F0'], wedgeprops=dict(width=0.45, edgecolor='#FFFFFF', linewidth=2))
+            ax_donut.text(0, 0, 'Persentase: 0%\n(Geser Slider)', ha='center', va='center', fontsize=8.5, fontweight='bold', color='#64748B')
+        else:
+            donut_colors = ['#BE123C', '#F59E0B', '#10B981', '#6366F1']
+            wedges, texts, autotexts = ax_donut.pie(
+                pct_values, 
+                labels=domains_short, 
+                autopct='%1.1f%%', 
+                startangle=120, 
+                colors=donut_colors, 
+                wedgeprops=dict(width=0.45, edgecolor='#FFFFFF', linewidth=2),
+                pctdistance=0.75
+            )
+            for t in texts:
+                t.set_fontsize(8.5)
+                t.set_fontweight('bold')
+                t.set_color('#0F172A')
+            for at in autotexts:
+                at.set_fontsize(7.5)
+                at.set_color('#FFFFFF')
+                at.set_fontweight('bold')
+                
+            ax_donut.text(0, 0, 'COBIT 2019\nUNKLAB', ha='center', va='center', fontsize=8.5, fontweight='bold', color='#1E3A8A')
         fig_donut.tight_layout()
         
         st.pyplot(fig_donut, use_container_width=True)

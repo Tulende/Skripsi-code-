@@ -400,11 +400,11 @@ if not st.session_state.authenticated:
             </div>
         """, unsafe_allow_html=True)
         
-        tab_login, tab_register = st.tabs(["🔑 Masuk (Sign In)", "Daftar Akun Baru"])
+        tab_login, tab_register = st.tabs(["🔑 Masuk (Sign In)", "📝 Daftar Akun Baru"])
         
         with tab_login:
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-            login_user = st.text_input("Username Auditor / Responden:", placeholder="cth: admin / auditor", key="login_username")
+            login_user = st.text_input("Username Auditor / Responden:", placeholder="cth: admin1 / responden1", key="login_username")
             login_pass = st.text_input("Password:", type="password", placeholder="••••••••", key="login_password")
             
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
@@ -419,6 +419,14 @@ if not st.session_state.authenticated:
                         st.rerun()
                     else:
                         st.error("Kredensial tidak valid! Periksa kembali username dan password Anda.")
+
+            st.markdown("""
+            <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px; margin-top:14px; font-size:0.75rem; color:#0369A1; line-height:1.5;">
+                <b>💡 Akun Bawaan Sistem (Langsung Pakai):</b><br>
+                • <b>Admin:</b> Username: <code>admin1</code> atau <code>admin</code> | Password: <code>admin123</code><br>
+                • <b>Responden:</b> Username: <code>responden1</code> | Password: <code>responden123</code>
+            </div>
+            """, unsafe_allow_html=True)
 
         with tab_register:
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)

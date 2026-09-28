@@ -72,16 +72,34 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    # Auto-seed akun sistem permanen agar tidak pernah hilang saat cloud reboot/redeploy
+    system_accounts = [
+        ("admin", "Novanca Tulende", "Kepala SIU UNKLAB", "Admin", hash_password("admin123")),
+        ("admin1", "Novanca Tulende", "IT Supervisor UNKLAB", "Admin", hash_password("admin123")),
+        ("responden", "Myeclle Kaseger", "Auditor Internal", "Responden", hash_password("responden123")),
+        ("responden1", "Myeclle Kaseger", "Auditor Internal", "Responden", hash_password("responden123")),
+    ]
+    for u, name, pos, role, pw_hash in system_accounts:
+        cursor.execute(
+            """INSERT INTO users (username, fullname, position, role, password_hash)
+               VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT(username) DO UPDATE SET 
+                   password_hash = excluded.password_hash,
+                   fullname = excluded.fullname,
+                   role = excluded.role""",
+            (u, name, pos, role, pw_hash)
+        )
     conn.commit()
     conn.close()
 
 def register_user(username, fullname, position, role, password):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    clean_u = username.strip().lower()
     try:
         cursor.execute(
             "INSERT INTO users (username, fullname, position, role, password_hash) VALUES (?, ?, ?, ?, ?)",
-            (username.strip().lower(), fullname.strip(), position.strip(), role, hash_password(password))
+            (clean_u, fullname.strip(), position.strip(), role, hash_password(password))
         )
         conn.commit()
         conn.close()
@@ -93,14 +111,21 @@ def register_user(username, fullname, position, role, password):
 def authenticate_user(username, password):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    clean_u = username.strip().lower()
+    clean_no_space = clean_u.replace(" ", "")
+    p_hash = hash_password(password)
+    
     cursor.execute(
-        "SELECT id, username, fullname, position, role, password_hash FROM users WHERE username = ?",
-        (username.strip().lower(),)
+        """SELECT id, username, fullname, position, role 
+           FROM users 
+           WHERE (username = ? OR REPLACE(LOWER(username), ' ', '') = ?)
+             AND password_hash = ?""",
+        (clean_u, clean_no_space, p_hash)
     )
     user = cursor.fetchone()
     conn.close()
     
-    if user and user[5] == hash_password(password):
+    if user:
         return True, {"id": user[0], "username": user[1], "fullname": user[2], "position": user[3], "role": user[4]}
     return False, None
 

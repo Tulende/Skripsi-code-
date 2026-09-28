@@ -400,7 +400,7 @@ if not st.session_state.authenticated:
             </div>
         """, unsafe_allow_html=True)
         
-        tab_login, tab_register = st.tabs(["🔑 Masuk (Sign In)", "📝 Daftar Akun Baru"])
+        tab_login, tab_register = st.tabs([" Masuk (Sign In)", " Daftar Akun Baru"])
         
         with tab_login:
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
@@ -422,7 +422,7 @@ if not st.session_state.authenticated:
 
             st.markdown("""
             <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px; margin-top:14px; font-size:0.75rem; color:#0369A1; line-height:1.5;">
-                <b>💡 Akun Bawaan Sistem (Langsung Pakai):</b><br>
+                <b> Akun Bawaan Sistem (Langsung Pakai):</b><br>
                 • <b>Admin:</b> Username: <code>admin1</code> atau <code>admin</code> | Password: <code>admin123</code><br>
                 • <b>Responden:</b> Username: <code>responden1</code> | Password: <code>responden123</code>
             </div>
@@ -549,19 +549,19 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
     </div>
     """, unsafe_allow_html=True)
     
-    with st.expander("👤 Identitas Penilai & Metadata Audit", expanded=True):
+    with st.expander(" Identitas Penilai & Metadata Audit", expanded=True):
         col_resp_a, col_resp_b = st.columns(2)
         resp_name = col_resp_a.text_input("Nama Penilai / Lead Auditor:", value="", placeholder="Ketik nama penilai...")
         resp_pos = col_resp_b.text_input("Jabatan / Unit Kerja Evaluasi:", value="", placeholder="Ketik jabatan penilai...")
 
-    tab_labels = [f"📊 {code}" for code in df_definitions.keys()]
+    tab_labels = [f"{code}" for code in df_definitions.keys()]
     tabs = st.tabs(tab_labels)
     temp_results = {}
 
     for idx, (df_code, df_info) in enumerate(df_definitions.items()):
         with tabs[idx]:
             is_fuzzy = (df_info["type"] == "fuzzy")
-            method_badge = "📐 Fuzzy TFN" if is_fuzzy else "📈 Direct Percentage"
+            method_badge = " Fuzzy TFN" if is_fuzzy else "Direct Percentage"
             scale_badge = f"Skala 1-{df_info['scale']}" if is_fuzzy else "Skala 0-100%"
             
             st.markdown(f"""
@@ -587,7 +587,7 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
             with col_r1:
                 st.markdown("""
                 <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-                    <strong style="color:#1E3A8A; font-size:0.85rem;">👤 Responden 1 (R1)</strong>
+                    <strong style="color:#1E3A8A; font-size:0.85rem;" Responden 1 (R1)</strong>
                 </div>
                 """, unsafe_allow_html=True)
                 for i, item in enumerate(items):
@@ -622,7 +622,7 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
             with col_r2:
                 st.markdown("""
                 <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-                    <strong style="color:#0284C7; font-size:0.85rem;">👤 Responden 2 (R2)</strong>
+                    <strong style="color:#0284C7; font-size:0.85rem;"> Responden 2 (R2)</strong>
                 </div>
                 """, unsafe_allow_html=True)
                 for i, item in enumerate(items):
@@ -685,9 +685,9 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
             temp_results[df_code] = rows
 
             if df_has_empty:
-                st.info(f"⏳ Indikator pada **{df_code}** masih kosong. Silakan pilih nilai pada seluruh pertanyaan di atas untuk melihat kalkulasi.")
+                st.info(f"Indikator pada **{df_code}** masih kosong. Silakan pilih nilai pada seluruh pertanyaan di atas untuk melihat kalkulasi.")
             else:
-                st.success(f"✅ Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
+                st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
                 df_preview = pd.DataFrame([{
                     "Indikator": r["indicator"],
                     "R1": r["r1"],
@@ -702,7 +702,7 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
     st.markdown("<br>", unsafe_allow_html=True)
     col_save, col_info_box = st.columns([1.2, 2])
     with col_save:
-        if st.button("💾 Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
+        if st.button("Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
             incomplete_dfs = [
                 code for code, r_list in temp_results.items()
                 if any(r["final"] is None for r in r_list)
@@ -710,19 +710,19 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
             if resp_name.strip() == "":
                 st.error("Silakan isi nama penilai terlebih dahulu.")
             elif incomplete_dfs:
-                st.warning(f"⚠️ Penilaian belum lengkap! Terdapat {len(incomplete_dfs)} Design Factor yang masih memiliki nilai kosong: {', '.join(incomplete_dfs)}.")
+                st.warning(f" Penilaian belum lengkap! Terdapat {len(incomplete_dfs)} Design Factor yang masih memiliki nilai kosong: {', '.join(incomplete_dfs)}.")
             else:
                 r_id = save_respondent_data(resp_name, resp_pos, temp_results)
-                st.success(f"✅ Penilaian lengkap berhasil direkam ke database dengan Respondent ID #{r_id}!")
+                st.success(f"Penilaian lengkap berhasil direkam ke database dengan Respondent ID #{r_id}!")
     with col_info_box:
-        st.info("💡 Data yang telah lengkap diisi di atas langsung terhubung ke menu **Visualisasi & Rekapitulasi**.")
+        st.info(" Data yang telah lengkap diisi di atas langsung terhubung ke menu **Visualisasi & Rekapitulasi**.")
 
 # ----------------------------------------------------
 # MODUL 2: REKAPITULASI & VISUALISASI DESIGN FACTOR
 # ----------------------------------------------------
 elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
     if not is_admin:
-        st.error("⛔ Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
+        st.error(" Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
         st.stop()
         
     st.markdown("""
@@ -737,7 +737,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
     ) and len(st.session_state.calculated_results) == 10
 
     if not is_ready:
-        st.warning("⚠️ Data penilaian kuesioner DF1–DF10 masih kosong atau belum terisi lengkap di Menu 1. Silakan buka Menu 1 dan lengkapi seluruh kuesioner terlebih dahulu untuk melihat rekapitulasi.")
+        st.warning("Data penilaian kuesioner DF1–DF10 masih kosong atau belum terisi lengkap di Menu 1. Silakan buka Menu 1 dan lengkapi seluruh kuesioner terlebih dahulu untuk melihat rekapitulasi.")
     else:
         summary_rows = []
         fuzzy_scores = {}
@@ -948,11 +948,11 @@ elif menu == "4. Capability Level & Export PDF":
     
     col_cap1, col_cap2 = st.columns(2)
     with col_cap1:
-        p_apo12 = st.slider("📌 APO12 — Managed Risk (%)", 0, 100, 0, help="Manajemen Risiko TI Institusi")
-        p_apo13 = st.slider("📌 APO13 — Managed Security (%)", 0, 100, 0, help="Sistem Manajemen Keamanan Informasi")
+        p_apo12 = st.slider("1. APO12 — Managed Risk (%)", 0, 100, 0, help="Manajemen Risiko TI Institusi")
+        p_apo13 = st.slider("2. APO13 — Managed Security (%)", 0, 100, 0, help="Sistem Manajemen Keamanan Informasi")
     with col_cap2:
-        p_dss05 = st.slider("📌 DSS05 — Security Services (%)", 0, 100, 0, help="Operasional Layanan Keamanan Jaringan & Data")
-        p_mea03 = st.slider("📌 MEA03 — Managed Compliance (%)", 0, 100, 0, help="Kepatuhan terhadap Regulasi Eksternal & Internal")
+        p_dss05 = st.slider("3. DSS05 — Security Services (%)", 0, 100, 0, help="Operasional Layanan Keamanan Jaringan & Data")
+        p_mea03 = st.slider("4. MEA03 — Managed Compliance (%)", 0, 100, 0, help="Kepatuhan terhadap Regulasi Eksternal & Internal")
         
     st.markdown("</div>", unsafe_allow_html=True)
 

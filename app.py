@@ -9,7 +9,7 @@ from datetime import datetime
 from engine import (
     init_db, register_user, authenticate_user, 
     save_respondent_data, save_capability_data,
-    calc_fuzzy_5, calc_fuzzy_3, calc_percentage_avg,
+    calc_fuzzy_5, calc_fuzzy_3, calc_percentage_avg, calc_risk_profile,
     get_rating_level_cobit, generate_pdf_report, DB_FILE
 )
 
@@ -304,9 +304,9 @@ df_definitions = {
     },
     "DF3": {
         "title": "DF3: Risk Profile", 
-        "type": "fuzzy", 
+        "type": "risk_profile", 
         "scale": 5, 
-        "desc": "Profil dan mitigasi risiko Teknologi Informasi kampus",
+        "desc": "Profil dan mitigasi risiko Teknologi Informasi kampus (Impact & Likelihood, Skala 1–5)",
         "items": ["IT Investment Decision Making", "Program & Project Life Cycle", "IT Cost & Oversight", "IT Expertise & Skills", "Enterprise/IT Architecture", "IT Infrastructure Incidents", "Unauthorized Actions", "Software Adoption Problems", "Hardware Incidents", "Software Failures", "Logical Attacks (Hacking/Malware)", "Third-Party / Supplier Incidents", "Noncompliance", "Geopolitical Issues", "Industrial Action", "Acts of Nature", "Technology-Based Innovation", "Environmental", "Data & Information Management"]
     },
     "DF4": {
@@ -561,8 +561,9 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
     for idx, (df_code, df_info) in enumerate(df_definitions.items()):
         with tabs[idx]:
             is_fuzzy = (df_info["type"] == "fuzzy")
-            method_badge = " Fuzzy TFN" if is_fuzzy else "Direct Percentage"
-            scale_badge = f"Skala 1-{df_info['scale']}" if is_fuzzy else "Skala 0-100%"
+            is_risk  = (df_info["type"] == "risk_profile")
+            method_badge = "⚡ Fuzzy TFN" if (is_fuzzy or is_risk) else "📊 Direct Percentage"
+            scale_badge  = f"Skala 1-{df_info['scale']}" if (is_fuzzy or is_risk) else "Skala 0-100%"
             
             st.markdown(f"""
             <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px 18px; margin-bottom:16px;">
@@ -580,124 +581,241 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
             """, unsafe_allow_html=True)
             
             items = df_info["items"]
-            col_r1, col_r2 = st.columns(2)
-            
-            r1_vals, r2_vals = [], []
-            
-            with col_r1:
-                st.markdown("""
-                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-                    <strong style="color:#1E3A8A; font-size:0.85rem;" Responden 1 (R1)</strong>
-                </div>
-                """, unsafe_allow_html=True)
-                for i, item in enumerate(items):
-                    if is_fuzzy:
-                        opts = list(range(1, df_info["scale"] + 1))
-                        if df_info["scale"] == 5:
-                            labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
-                            f_func = lambda x: labels_5[x-1] if x else ""
-                        else:
-                            labels_3 = ["1 - No Issue", "2 - Issue", "3 - Serious Issue"]
-                            f_func = lambda x: labels_3[x-1] if x else ""
-                        val = st.selectbox(
-                            f"[R1] {item}", 
-                            options=opts, 
-                            index=None, 
-                            format_func=f_func,
-                            placeholder="-- Pilih Skor --", 
-                            key=f"r1_{df_code}_{i}"
-                        )
-                    else:
-                        val = st.number_input(
-                            f"[R1] {item}", 
-                            min_value=0.0, 
-                            max_value=100.0, 
-                            value=None, 
-                            step=5.0, 
-                            placeholder="Ketik % (0-100)...", 
-                            key=f"r1_{df_code}_{i}"
-                        )
-                    r1_vals.append(val)
 
-            with col_r2:
-                st.markdown("""
-                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-                    <strong style="color:#0284C7; font-size:0.85rem;"> Responden 2 (R2)</strong>
-                </div>
-                """, unsafe_allow_html=True)
+            # ──────────────────────────────────────────────────────────────────
+            # DF3 RISK PROFILE: 4 kolom input (I-R1, I-R2, L-R1, L-R2)
+            # ──────────────────────────────────────────────────────────────────
+            if is_risk:
+                opts5 = list(range(1, 6))
+                labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
+                f5 = lambda x: labels_5[x-1] if x else ""
+
+                # Header 4 kolom
+                col_ir1, col_ir2, col_lr1, col_lr2 = st.columns(4)
+                with col_ir1:
+                    st.markdown("""
+                    <div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;">
+                        <strong style="color:#4338CA; font-size:0.82rem;">🔴 Impact – R1</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_ir2:
+                    st.markdown("""
+                    <div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;">
+                        <strong style="color:#4338CA; font-size:0.82rem;">🔴 Impact – R2</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_lr1:
+                    st.markdown("""
+                    <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;">
+                        <strong style="color:#15803D; font-size:0.82rem;">🟡 Likelihood – R1</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_lr2:
+                    st.markdown("""
+                    <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;">
+                        <strong style="color:#15803D; font-size:0.82rem;">🟡 Likelihood – R2</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                ir1_vals, ir2_vals, lr1_vals, lr2_vals = [], [], [], []
+
                 for i, item in enumerate(items):
-                    if is_fuzzy:
-                        opts = list(range(1, df_info["scale"] + 1))
-                        if df_info["scale"] == 5:
-                            labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
-                            f_func = lambda x: labels_5[x-1] if x else ""
-                        else:
-                            labels_3 = ["1 - No Issue", "2 - Issue", "3 - Serious Issue"]
-                            f_func = lambda x: labels_3[x-1] if x else ""
-                        val = st.selectbox(
-                            f"[R2] {item}", 
-                            options=opts, 
-                            index=None, 
-                            format_func=f_func,
-                            placeholder="-- Pilih Skor --", 
-                            key=f"r2_{df_code}_{i}"
-                        )
+                    col_ir1, col_ir2, col_lr1, col_lr2 = st.columns(4)
+                    with col_ir1:
+                        v = st.selectbox(f"[I-R1] {item}", options=opts5, index=None,
+                                         format_func=f5, placeholder="-- Pilih --",
+                                         key=f"ir1_DF3_{i}")
+                        ir1_vals.append(v)
+                    with col_ir2:
+                        v = st.selectbox(f"[I-R2] {item}", options=opts5, index=None,
+                                         format_func=f5, placeholder="-- Pilih --",
+                                         key=f"ir2_DF3_{i}")
+                        ir2_vals.append(v)
+                    with col_lr1:
+                        v = st.selectbox(f"[L-R1] {item}", options=opts5, index=None,
+                                         format_func=f5, placeholder="-- Pilih --",
+                                         key=f"lr1_DF3_{i}")
+                        lr1_vals.append(v)
+                    with col_lr2:
+                        v = st.selectbox(f"[L-R2] {item}", options=opts5, index=None,
+                                         format_func=f5, placeholder="-- Pilih --",
+                                         key=f"lr2_DF3_{i}")
+                        lr2_vals.append(v)
+
+                # Kalkulasi Risk Profile
+                rows = []
+                df_has_empty = False
+                for i, item in enumerate(items):
+                    ir1, ir2 = ir1_vals[i], ir2_vals[i]
+                    lr1, lr2 = lr1_vals[i], lr2_vals[i]
+                    if any(v is None for v in [ir1, ir2, lr1, lr2]):
+                        df_has_empty = True
+                        rows.append({
+                            "indicator": item,
+                            "method": "Risk Profile (Fuzzy TFN)",
+                            "r1": None, "r2": None,
+                            "final": None,
+                            "final_display": "Belum Diisi",
+                            "rounded_toolkit": "-",
+                            # extra DF3 detail
+                            "ir1": ir1, "ir2": ir2, "lr1": lr1, "lr2": lr2,
+                        })
                     else:
-                        val = st.number_input(
-                            f"[R2] {item}", 
-                            min_value=0.0, 
-                            max_value=100.0, 
-                            value=None, 
-                            step=5.0, 
-                            placeholder="Ketik % (0-100)...", 
-                            key=f"r2_{df_code}_{i}"
-                        )
-                    r2_vals.append(val)
-            
-            rows = []
-            df_has_empty = False
-            for item, r1, r2 in zip(items, r1_vals, r2_vals):
-                if r1 is None or r2 is None:
-                    df_has_empty = True
-                    final_sc = None
-                    final_display = "Belum Diisi"
-                    rounded_toolkit = "-"
+                        res = calc_risk_profile(ir1, ir2, lr1, lr2)
+                        rows.append({
+                            "indicator": item,
+                            "method": "Risk Profile (Fuzzy TFN)",
+                            "r1": res["impact_val"],   # simpan impact sebagai r1 (untuk kompatibilitas simpan DB)
+                            "r2": res["likelihood_val"],
+                            "final": float(res["risk_rating"]),
+                            "final_display": str(res["risk_rating"]),
+                            "rounded_toolkit": str(res["risk_rating"]),
+                            # extra DF3 detail
+                            "ir1": ir1, "ir2": ir2, "lr1": lr1, "lr2": lr2,
+                            "impact_val": res["impact_val"],
+                            "likelihood_val": res["likelihood_val"],
+                            "risk_rating": res["risk_rating"],
+                        })
+                temp_results[df_code] = rows
+
+                if df_has_empty:
+                    st.info(f"Indikator pada **{df_code}** masih kosong. Silakan pilih nilai Impact & Likelihood seluruh skenario risiko.")
                 else:
-                    if is_fuzzy:
-                        scale_max = df_info["scale"]
-                        final_sc = calc_fuzzy_5(r1, r2) if scale_max == 5 else calc_fuzzy_3(r1, r2)
-                        final_display = f"{final_sc:.2f}"
-                        rounded_toolkit = str(int(round(final_sc)))
-                    else:
-                        final_sc = calc_percentage_avg(r1, r2)
-                        final_display = f"{final_sc:.1f}%"
-                        rounded_toolkit = f"{int(round(final_sc))}%"
-                    
-                rows.append({
-                    "indicator": item, 
-                    "method": "Fuzzy Logic TFN" if is_fuzzy else "Direct Percentage (%)", 
-                    "r1": r1, 
-                    "r2": r2, 
-                    "final": final_sc,
-                    "final_display": final_display,
-                    "rounded_toolkit": rounded_toolkit
-                })
-            temp_results[df_code] = rows
+                    st.success(f"Penilaian **{df_code}** lengkap! Hasil Risk Rating:")
+                    df_preview = pd.DataFrame([{
+                        "Skenario Risiko": r["indicator"],
+                        "I-R1": r["ir1"],
+                        "I-R2": r["ir2"],
+                        "Impact (Bulat)": r["impact_val"],
+                        "L-R1": r["lr1"],
+                        "L-R2": r["lr2"],
+                        "Likelihood (Bulat)": r["likelihood_val"],
+                        "Risk Rating": r["risk_rating"],
+                    } for r in rows])
+                    st.dataframe(df_preview, use_container_width=True)
 
-            if df_has_empty:
-                st.info(f"Indikator pada **{df_code}** masih kosong. Silakan pilih nilai pada seluruh pertanyaan di atas untuk melihat kalkulasi.")
+            # ──────────────────────────────────────────────────────────────────
+            # DF LAIN: 2 kolom input standar (R1 & R2)
+            # ──────────────────────────────────────────────────────────────────
             else:
-                st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
-                df_preview = pd.DataFrame([{
-                    "Indikator": r["indicator"],
-                    "R1": r["r1"],
-                    "R2": r["r2"],
-                    "Nilai Akhir Agregat": r["final_display"],
-                    "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
-                } for r in rows])
-                st.dataframe(df_preview, use_container_width=True)
+                col_r1, col_r2 = st.columns(2)
+                
+                r1_vals, r2_vals = [], []
+                
+                with col_r1:
+                    st.markdown("""
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
+                        <strong style="color:#1E3A8A; font-size:0.85rem;">👤 Responden 1 (R1)</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    for i, item in enumerate(items):
+                        if is_fuzzy:
+                            opts = list(range(1, df_info["scale"] + 1))
+                            if df_info["scale"] == 5:
+                                labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
+                                f_func = lambda x: labels_5[x-1] if x else ""
+                            else:
+                                labels_3 = ["1 - No Issue", "2 - Issue", "3 - Serious Issue"]
+                                f_func = lambda x: labels_3[x-1] if x else ""
+                            val = st.selectbox(
+                                f"[R1] {item}", 
+                                options=opts, 
+                                index=None, 
+                                format_func=f_func,
+                                placeholder="-- Pilih Skor --", 
+                                key=f"r1_{df_code}_{i}"
+                            )
+                        else:
+                            val = st.number_input(
+                                f"[R1] {item}", 
+                                min_value=0.0, 
+                                max_value=100.0, 
+                                value=None, 
+                                step=5.0, 
+                                placeholder="Ketik % (0-100)...", 
+                                key=f"r1_{df_code}_{i}"
+                            )
+                        r1_vals.append(val)
 
-    st.session_state.calculated_results = temp_results
+                with col_r2:
+                    st.markdown("""
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
+                        <strong style="color:#0284C7; font-size:0.85rem;">👤 Responden 2 (R2)</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    for i, item in enumerate(items):
+                        if is_fuzzy:
+                            opts = list(range(1, df_info["scale"] + 1))
+                            if df_info["scale"] == 5:
+                                labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
+                                f_func = lambda x: labels_5[x-1] if x else ""
+                            else:
+                                labels_3 = ["1 - No Issue", "2 - Issue", "3 - Serious Issue"]
+                                f_func = lambda x: labels_3[x-1] if x else ""
+                            val = st.selectbox(
+                                f"[R2] {item}", 
+                                options=opts, 
+                                index=None, 
+                                format_func=f_func,
+                                placeholder="-- Pilih Skor --", 
+                                key=f"r2_{df_code}_{i}"
+                            )
+                        else:
+                            val = st.number_input(
+                                f"[R2] {item}", 
+                                min_value=0.0, 
+                                max_value=100.0, 
+                                value=None, 
+                                step=5.0, 
+                                placeholder="Ketik % (0-100)...", 
+                                key=f"r2_{df_code}_{i}"
+                            )
+                        r2_vals.append(val)
+                
+                rows = []
+                df_has_empty = False
+                for item, r1, r2 in zip(items, r1_vals, r2_vals):
+                    if r1 is None or r2 is None:
+                        df_has_empty = True
+                        final_sc = None
+                        final_display = "Belum Diisi"
+                        rounded_toolkit = "-"
+                    else:
+                        if is_fuzzy:
+                            scale_max = df_info["scale"]
+                            final_sc = calc_fuzzy_5(r1, r2) if scale_max == 5 else calc_fuzzy_3(r1, r2)
+                            final_display = f"{final_sc:.2f}"
+                            rounded_toolkit = str(int(round(final_sc)))
+                        else:
+                            final_sc = calc_percentage_avg(r1, r2)
+                            final_display = f"{final_sc:.1f}%"
+                            rounded_toolkit = f"{int(round(final_sc))}%"
+                        
+                    rows.append({
+                        "indicator": item, 
+                        "method": "Fuzzy Logic TFN" if is_fuzzy else "Direct Percentage (%)", 
+                        "r1": r1, 
+                        "r2": r2, 
+                        "final": final_sc,
+                        "final_display": final_display,
+                        "rounded_toolkit": rounded_toolkit
+                    })
+                temp_results[df_code] = rows
+
+                if df_has_empty:
+                    st.info(f"Indikator pada **{df_code}** masih kosong. Silakan pilih nilai pada seluruh pertanyaan di atas untuk melihat kalkulasi.")
+                else:
+                    st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
+                    df_preview = pd.DataFrame([{
+                        "Indikator": r["indicator"],
+                        "R1": r["r1"],
+                        "R2": r["r2"],
+                        "Nilai Akhir Agregat": r["final_display"],
+                        "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
+                    } for r in rows])
+                    st.dataframe(df_preview, use_container_width=True)
+
+
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_save, col_info_box = st.columns([1.2, 2])

@@ -197,6 +197,44 @@ def calc_fuzzy_3(r1, r2):
 def calc_percentage_avg(r1_pct, r2_pct):
     return round((r1_pct + r2_pct) / 2.0, 2)
 
+def calc_risk_profile(i_r1, i_r2, l_r1, l_r2):
+    """
+    Kalkulasi DF3 Risk Profile dengan 4 input terpisah:
+    - i_r1, i_r2 : skor Impact dari Responden 1 & 2 (skala 1-5)
+    - l_r1, l_r2 : skor Likelihood dari Responden 1 & 2 (skala 1-5)
+    Return dict: impact_val, likelihood_val, risk_rating
+    Sesuai toolkit: Impact = round(1 + z*_impact * 4), Likelihood = round(1 + z*_likelihood * 4)
+    Risk Rating = Impact * Likelihood
+    """
+    # --- Impact ---
+    ti1, ti2 = get_tfn_5(i_r1), get_tfn_5(i_r2)
+    ai_avg = round((ti1[0] + ti2[0]) / 2.0, 2)
+    bi_avg = round((ti1[1] + ti2[1]) / 2.0, 2)
+    ci_avg = round((ti1[2] + ti2[2]) / 2.0, 2)
+    zi_star = round((ai_avg + bi_avg + ci_avg) / 3.0, 2)
+    impact_raw = round(1 + (zi_star * 4), 2)
+    impact_val = int(round(impact_raw))          # dibulatkan seperti di toolkit
+
+    # --- Likelihood ---
+    tl1, tl2 = get_tfn_5(l_r1), get_tfn_5(l_r2)
+    al_avg = round((tl1[0] + tl2[0]) / 2.0, 2)
+    bl_avg = round((tl1[1] + tl2[1]) / 2.0, 2)
+    cl_avg = round((tl1[2] + tl2[2]) / 2.0, 2)
+    zl_star = round((al_avg + bl_avg + cl_avg) / 3.0, 2)
+    likelihood_raw = round(1 + (zl_star * 4), 2)
+    likelihood_val = int(round(likelihood_raw))  # dibulatkan seperti di toolkit
+
+    # --- Risk Rating ---
+    risk_rating = impact_val * likelihood_val
+
+    return {
+        "impact_raw": impact_raw,
+        "impact_val": impact_val,
+        "likelihood_raw": likelihood_raw,
+        "likelihood_val": likelihood_val,
+        "risk_rating": risk_rating
+    }
+
 def get_rating_level_cobit(pct):
     if pct < 15: return "N - Not Achieved (0-14%)", 1
     elif pct < 50: return "P - Partially Achieved (15-49%)", 1

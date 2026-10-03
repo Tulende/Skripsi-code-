@@ -205,33 +205,112 @@ st.markdown("""
         }
     }
 
-    /* User Profile Card on Sidebar */
+    /* User Profile Card & Sidebar Navigation Enhancements */
     .user-profile-badge {
-        background: linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%);
+        background: linear-gradient(135deg, #091E3A 0%, #102A4E 55%, #1E3A8A 100%);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 12px;
-        padding: 16px;
+        border-radius: 16px;
+        padding: 18px 16px;
         color: #FFFFFF;
-        margin-bottom: 16px;
-        box-shadow: 0 6px 18px -4px rgba(10, 37, 64, 0.35);
+        margin-bottom: 18px;
+        box-shadow: 0 8px 24px -4px rgba(9, 30, 58, 0.35);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .user-profile-badge::after {
+        content: "";
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 110px;
+        height: 110px;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .user-avatar-circle {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, #38BDF8 0%, #1D4ED8 100%);
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        flex-shrink: 0;
     }
 
     .user-role-pill {
         display: inline-block;
-        background: #F59E0B;
-        color: #1E293B;
-        padding: 3px 9px;
+        background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+        color: #FFFFFF;
+        padding: 3px 10px;
         border-radius: 999px;
-        font-size: 0.7rem;
+        font-size: 0.66rem;
         font-weight: 800;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
     }
 
     .user-role-pill.respondent {
-        background: #38BDF8;
-        color: #0C4A6E;
+        background: linear-gradient(90deg, #0284C7 0%, #0369A1 100%);
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+    }
+
+    /* Modern Executive Sidebar Navigation styling */
+    [data-testid="stSidebar"] [data-testid="stRadio"] > label {
+        font-size: 0.74rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+        color: #64748B !important;
+        text-transform: uppercase !important;
+        margin-bottom: 10px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {
+        gap: 8px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 11px 14px !important;
+        margin: 0 !important;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 2px 5px -1px rgba(15, 23, 42, 0.04) !important;
+        cursor: pointer !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:hover {
+        border-color: #0284C7 !important;
+        background: #F0F9FF !important;
+        transform: translateY(-1px) !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label p {
+        font-size: 0.84rem !important;
+        font-weight: 600 !important;
+        color: #1E293B !important;
+        line-height: 1.35 !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+        background: linear-gradient(135deg, #091E3A 0%, #1E3A8A 100%) !important;
+        border-color: #1E3A8A !important;
+        box-shadow: 0 6px 16px -3px rgba(30, 58, 138, 0.35) !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
     }
 
     /* Touch-friendly Tabs with Horizontal Scrolling */
@@ -473,49 +552,65 @@ role_class = "" if is_admin else "respondent"
 role_label = "ADMINISTRATOR AUDIT" if is_admin else "AUDITOR RESPONDEN"
 
 # SIDEBAR: USER BADGE & NAVIGATION
+user_name = user_p.get('fullname', 'Auditor')
+initials = "".join([w[0].upper() for w in user_name.split()[:2]]) if user_name else "A"
+
 st.sidebar.markdown(f"""
 <div class="user-profile-badge">
-    <div class="user-role-pill {role_class}">{role_label}</div>
-    <div style="font-size: 1.05rem; font-weight: 700; line-height: 1.3;">{user_p['fullname']}</div>
-    <div style="font-size: 0.78rem; opacity: 0.85; margin-top: 2px;">{user_p['position']}</div>
-    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.72rem; color: #93C5FD; display: flex; align-items: center; gap: 6px;">
-        <span style="display:inline-block; width:7px; height:7px; background:#10B981; border-radius:50%;"></span>
-        Sesi Aktif di SQLite
+    <div class="user-avatar-wrapper">
+        <div class="user-avatar-circle">{initials}</div>
+        <div style="flex: 1; min-width: 0;">
+            <div class="user-role-pill {role_class}">{role_label}</div>
+            <div style="font-size: 1.02rem; font-weight: 700; color: #FFFFFF; line-height: 1.25; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{user_name}</div>
+            <div style="font-size: 0.76rem; color: #94A3B8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{user_p.get('position', 'Staff')}</div>
+        </div>
+    </div>
+    <div style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 0.72rem; color: #93C5FD; display: flex; align-items: center; justify-content: space-between;">
+        <span style="display: flex; align-items: center; gap: 6px;">
+            <span style="display:inline-block; width:7px; height:7px; background:#10B981; border-radius:50%; box-shadow: 0 0 8px #10B981;"></span>
+            Sesi Aktif di SQLite
+        </span>
+        <span style="opacity: 0.7; font-size: 0.68rem; font-weight: 600;">COBIT 2019</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 if is_admin:
     menu = st.sidebar.radio(
-        "NAVIGASI MODUL UTAMA:",
+        "NAVIGASI MODUL UTAMA",
         [
-            "1. Input Penilaian Design Factor (DF1-DF10)", 
-            "2. Rekapitulasi & Visualisasi Design Factor", 
-            "3. Riwayat Responden & Database", 
-            "4. Capability Level & Export PDF"
+            "📝  1. Input Penilaian DF (DF1–DF10)", 
+            "📊  2. Rekapitulasi & Visualisasi DF", 
+            "🗄️  3. Riwayat Responden & Database", 
+            "🎯  4. Capability Level & Export PDF"
         ]
     )
 else:
     menu = st.sidebar.radio(
-        "NAVIGASI MODUL UTAMA:",
+        "NAVIGASI MODUL UTAMA",
         [
-            "1. Input Penilaian Design Factor (DF1-DF10)", 
-            "4. Capability Level & Export PDF"
+            "📝  1. Input Penilaian DF (DF1–DF10)", 
+            "🎯  4. Capability Level & Export PDF"
         ]
     )
 
-st.sidebar.markdown("---")
+st.sidebar.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
 st.sidebar.markdown("""
-<div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; font-size:0.75rem; color:#475569;">
-    <strong style="color:#0F172A;"> Landasan Analisis:</strong><br>
-    • <b>COBIT 2019:</b> 10 Design Factors & 4 Domain Prioritas UNKLAB (APO12, APO13, DSS05, MEA03).<br>
-    • <b>Fuzzy Logic:</b> Triangular Fuzzy Number (TFN) & Bobot Defuzzifikasi Rata-Rata ($z^*$).
+<div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px 16px; font-size:0.76rem; color:#475569; box-shadow: 0 2px 8px -2px rgba(15,23,42,0.05);">
+    <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+        <span style="font-size:0.9rem;">📚</span>
+        <strong style="color:#0F172A; font-size:0.82rem;">Landasan Kerangka Kerja:</strong>
+    </div>
+    <div style="line-height:1.6;">
+        • <b>COBIT 2019:</b> 10 Design Factors & 4 Domain Prioritas UNKLAB (<code>APO12</code>, <code>APO13</code>, <code>DSS05</code>, <code>MEA03</code>).<br>
+        • <b>Fuzzy Logic:</b> Triangular Fuzzy Number (TFN) & Defuzzifikasi $z^*$.
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
-if st.sidebar.button(" Keluar / Logout", use_container_width=True):
+if st.sidebar.button("🚪  Keluar dari Sesi Audit", use_container_width=True):
     st.session_state.authenticated = False
     st.session_state.user_info = None
     st.session_state.calculated_results = {}
@@ -541,7 +636,7 @@ st.markdown("""
 # ----------------------------------------------------
 # MODUL 1: INPUT PENILAIAN DF1 - DF10
 # ----------------------------------------------------
-if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
+if "1. Input" in menu:
     st.markdown("""
     <div style="margin-bottom:14px;">
         <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">Formulir Pengisian Kuesioner (DF1 - DF10)</h2>
@@ -841,7 +936,7 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
 # ----------------------------------------------------
 # MODUL 2: REKAPITULASI & VISUALISASI DESIGN FACTOR
 # ----------------------------------------------------
-elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
+elif "2. Rekapitulasi" in menu:
     if not is_admin:
         st.error(" Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
         st.stop()
@@ -852,6 +947,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
         <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Visualisasi polar radar untuk skor Fuzzy Logic dan bar horizontal untuk persentase faktor tata kelola</p>
     </div>
     """, unsafe_allow_html=True)
+
     
     # Auto-load data paling baru dari database jika session_state masih kosong/belum lengkap
     is_ready_session = bool(st.session_state.calculated_results) and all(
@@ -1274,7 +1370,7 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
 # ----------------------------------------------------
 # MODUL 3: RIWAYAT DATABASE SQLITE
 # ----------------------------------------------------
-elif menu == "3. Riwayat Responden & Database":
+elif "3. Riwayat" in menu:
     if not is_admin:
         st.error(" Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
         st.stop()
@@ -1312,7 +1408,7 @@ elif menu == "3. Riwayat Responden & Database":
 # ----------------------------------------------------
 # MODUL 4: CAPABILITY LEVEL & EXPORT PDF
 # ----------------------------------------------------
-elif menu == "4. Capability Level & Export PDF":
+elif "4. Capability" in menu:
     st.markdown("""
     <div style="margin-bottom:16px;">
         <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">Penilaian Capability Level & Analisis Gap</h2>

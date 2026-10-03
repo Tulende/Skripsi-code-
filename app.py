@@ -8,7 +8,7 @@ from datetime import datetime
 # Mengimpor modul dari engine.py
 from engine import (
     init_db, register_user, authenticate_user, 
-    save_respondent_data, save_capability_data,
+    save_respondent_data, save_capability_data, load_latest_respondent_data,
     calc_fuzzy_5, calc_fuzzy_3, calc_percentage_avg, calc_risk_profile,
     get_rating_level_cobit, generate_pdf_report, DB_FILE
 )
@@ -817,10 +817,13 @@ if menu == "1. Input Penilaian Design Factor (DF1-DF10)":
 
 
 
+    st.session_state.calculated_results = temp_results
+
     st.markdown("<br>", unsafe_allow_html=True)
     col_save, col_info_box = st.columns([1.2, 2])
     with col_save:
         if st.button("Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
+            st.session_state.calculated_results = temp_results
             incomplete_dfs = [
                 code for code, r_list in temp_results.items()
                 if any(r["final"] is None for r in r_list)
@@ -850,11 +853,18 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
     </div>
     """, unsafe_allow_html=True)
     
-    is_ready = bool(st.session_state.calculated_results) and all(
-        all(r['final'] is not None for r in rows) for rows in st.session_state.calculated_results.values()
+    # Auto-load data paling baru dari database jika session_state masih kosong/belum lengkap
+    is_ready_session = bool(st.session_state.calculated_results) and all(
+        all(r.get('final') is not None for r in rows) for rows in st.session_state.calculated_results.values()
     ) and len(st.session_state.calculated_results) == 10
 
-    if not is_ready:
+    if not is_ready_session:
+        db_data = load_latest_respondent_data()
+        if db_data and len(db_data) == 10 and all(all(r.get('final') is not None for r in rows) for rows in db_data.values()):
+            st.session_state.calculated_results = db_data
+            is_ready_session = True
+
+    if not is_ready_session:
         st.warning("Data penilaian kuesioner DF1–DF10 masih kosong atau belum terisi lengkap di Menu 1. Silakan buka Menu 1 dan lengkapi seluruh kuesioner terlebih dahulu untuk melihat rekapitulasi.")
     else:
         summary_rows = []

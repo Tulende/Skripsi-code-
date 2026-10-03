@@ -147,6 +147,54 @@ def save_respondent_data(name, position, df_results_dict):
     conn.close()
     return respondent_id
 
+def load_latest_respondent_data():
+    """Memuat data kuesioner DF1-DF10 paling baru dari database SQLite."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM respondents ORDER BY id DESC LIMIT 1")
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {}
+    
+    respondent_id = row[0]
+    cursor.execute(
+        "SELECT df_code, indicator_name, calc_method, score_r1, score_r2, final_result FROM df_responses WHERE respondent_id = ? ORDER BY id ASC",
+        (respondent_id,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    if not rows:
+        return {}
+
+    results = {}
+    for df_code, indicator, method, r1, r2, final in rows:
+        if df_code not in results:
+            results[df_code] = []
+        
+        if final is None:
+            final_display = "Belum Diisi"
+            rounded_toolkit = "-"
+        else:
+            if "%" in str(method) or "Percentage" in str(method):
+                final_display = f"{final:.1f}%"
+                rounded_toolkit = f"{int(round(final))}%"
+            else:
+                final_display = f"{final:.2f}"
+                rounded_toolkit = str(int(round(final)))
+        
+        results[df_code].append({
+            "indicator": indicator,
+            "method": method,
+            "r1": r1,
+            "r2": r2,
+            "final": final,
+            "final_display": final_display,
+            "rounded_toolkit": rounded_toolkit
+        })
+    return results
+
 def save_capability_data(domain_code, as_is, to_be, gap, pct, rating):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()

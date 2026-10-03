@@ -1001,8 +1001,265 @@ elif menu == "2. Rekapitulasi & Visualisasi Design Factor":
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'> Tabel Detail Agregasi 10 Design Factors</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'>📋 Tabel Detail Agregasi 10 Design Factors</h3>", unsafe_allow_html=True)
         st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
+
+        # ══════════════════════════════════════════════════════════════════════
+        # DF MAP — Kalkulasi Otomatis Skor Domain Prioritas dari Design Factors
+        # Berdasarkan bobot resmi ISACA COBIT 2019 Design Toolkit
+        # ══════════════════════════════════════════════════════════════════════
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,#1E3A8A,#0284C7); border-radius:14px; padding:18px 22px; margin-bottom:18px;">
+            <h2 style="margin:0; color:#FFFFFF; font-size:1.2rem; font-weight:800;">🗺️ Design Factor Map — Skor Domain Prioritas COBIT 2019</h2>
+            <p style="margin:6px 0 0 0; color:#BAE6FD; font-size:0.85rem;">Kalkulasi otomatis bobot kontribusi setiap Design Factor terhadap 4 domain prioritas UNKLAB (sesuai tabel resmi ISACA)</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ─── Ambil hasil DF dari session state ───
+        df_results = st.session_state.calculated_results
+
+        # ─── Ambil nilai dominan per DF ───
+        df1_rows = df_results.get("DF1", [])
+        df1_scores = {r["indicator"]: r["final"] for r in df1_rows if r["final"] is not None}
+
+        df2_avg = np.mean([r["final"] for r in df_results.get("DF2",[]) if r["final"] is not None]) if df_results.get("DF2") else 0
+        df3_ratings = {r["indicator"]: (r["final"] if r["final"] else 0) for r in df_results.get("DF3", [])}
+        df4_vals = {r["indicator"]: (r["final"] if r["final"] else 0) for r in df_results.get("DF4", [])}
+
+        df5_rows = df_results.get("DF5", [])
+        df5_high   = next((r["final"] for r in df5_rows if "High" in r["indicator"]), 0) or 0
+        df5_normal = next((r["final"] for r in df5_rows if "Normal" in r["indicator"]), 0) or 0
+
+        df6_rows = df_results.get("DF6", [])
+        df6_high   = next((r["final"] for r in df6_rows if "High" in r["indicator"]), 0) or 0
+        df6_normal = next((r["final"] for r in df6_rows if "Normal" in r["indicator"]), 0) or 0
+        df6_low    = next((r["final"] for r in df6_rows if "Low" in r["indicator"]), 0) or 0
+
+        df7_rows = df_results.get("DF7", [])
+        df7_support    = next((r["final"] for r in df7_rows if "Support" in r["indicator"]), 0) or 0
+        df7_factory    = next((r["final"] for r in df7_rows if "Factory" in r["indicator"]), 0) or 0
+        df7_turnaround = next((r["final"] for r in df7_rows if "Turnaround" in r["indicator"]), 0) or 0
+        df7_strategic  = next((r["final"] for r in df7_rows if "Strategic" in r["indicator"]), 0) or 0
+
+        df8_rows = df_results.get("DF8", [])
+        df8_out  = next((r["final"] for r in df8_rows if "Outsourc" in r["indicator"] or "out" in r["indicator"].lower()), 0) or 0
+        df8_cloud= next((r["final"] for r in df8_rows if "Cloud" in r["indicator"]), 0) or 0
+        df8_in   = next((r["final"] for r in df8_rows if "In-sourced" in r["indicator"] or "nsourc" in r["indicator"]), 0) or 0
+
+        df9_rows = df_results.get("DF9", [])
+        df9_agile = next((r["final"] for r in df9_rows if "Agile" in r["indicator"]), 0) or 0
+        df9_devops= next((r["final"] for r in df9_rows if "DevOps" in r["indicator"]), 0) or 0
+        df9_trad  = next((r["final"] for r in df9_rows if "Traditional" in r["indicator"] or "Waterfall" in r["indicator"]), 0) or 0
+
+        df10_rows = df_results.get("DF10", [])
+        df10_first  = next((r["final"] for r in df10_rows if "First" in r["indicator"]), 0) or 0
+        df10_follow = next((r["final"] for r in df10_rows if "Follower" in r["indicator"]), 0) or 0
+        df10_slow   = next((r["final"] for r in df10_rows if "Slow" in r["indicator"]), 0) or 0
+
+        DOMAINS = {
+            "APO12": "Managed Risk",
+            "APO13": "Managed Security",
+            "DSS05": "Managed Security Services",
+            "MEA03": "Managed Compliance"
+        }
+
+        DF1_CATS = ["Growth / Acquisition", "Innovation / Differentiation", "Cost Leadership", "Client Service / Stability"]
+        DF1_W = {
+            "APO12": [1.0, 1.5, 1.0, 2.5],
+            "APO13": [1.0, 1.0, 1.0, 2.5],
+            "DSS05": [1.0, 1.0, 1.0, 2.5],
+            "MEA03": [1.0, 1.0, 1.0, 1.0],
+        }
+
+        DF3_ITEMS = ["IT Investment Decision Making", "Program & Project Life Cycle", "IT Cost & Oversight",
+                     "IT Expertise & Skills", "Enterprise/IT Architecture", "IT Infrastructure Incidents",
+                     "Unauthorized Actions", "Software Adoption Problems", "Hardware Incidents",
+                     "Software Failures", "Logical Attacks (Hacking/Malware)", "Third-Party / Supplier Incidents",
+                     "Noncompliance", "Geopolitical Issues", "Industrial Action", "Acts of Nature",
+                     "Technology-Based Innovation", "Environmental", "Data & Information Management"]
+        DF3_W = {
+            "APO12": [0,0,0,0,0,0,3,0,0,2,3,0,0,0,0,2,0,0,0],
+            "APO13": [0,0,0,0,0,0,4,0,0,0,4,0,3,0,0,0,0,0,0],
+            "DSS05": [0,0,0,0,0,3,4,0,2,0,4,0,3,0,3,2,0,0,3],
+            "MEA03": [0,1,0,0,0,1,2,0,0,0,3,2,4,2,0,0,0,0,2],
+        }
+
+        DF4_ITEMS = ["Frustration antara entitas TI", "Frustration antara dept bisnis & TI",
+                     "Insiden TI serius (kehilangan data, keamanan)", "Masalah pengiriman layanan outsourcer",
+                     "Kegagalan memenuhi regulasi TI", "Temuan audit kinerja TI buruk",
+                     "Pengeluaran TI tidak resmi / tersembunyi", "Duplikasi & tumpang tindih inisiatif TI",
+                     "SDM TI tidak mencukupi / kurang keahlian", "Perubahan TI gagal memenuhi bisnis",
+                     "Eksekutif enggan terlibat keputusan TI", "Model operasi TI terlalu rumit",
+                     "Biaya TI dinilai terlalu tinggi", "Arsitektur TI menghambat inisiatif baru",
+                     "Kesenjangan pengetahuan bisnis & teknis", "Masalah kualitas & integrasi data",
+                     "End-user computing tinggi tanpa pengawasan", "Dept bisnis bangun solusi TI sendiri",
+                     "Pengabaian regulasi privasi", "Ketidakmampuan manfaatkan teknologi baru"]
+        DF4_W = {
+            "APO12": [1,0.5,2.5,1.5,2,2,1,1,0.5,1,1,1,1,1,1,2,1,1.5,2.5,1],
+            "APO13": [0,0,3.5,1,2,1,0,1,0,0.5,0,0,0,0,0,1.5,2,1,2,1],
+            "DSS05": [0,0,4,2,2,0,0,0,0,0,0,0,0,0,0,1.5,1,2,2,0],
+            "MEA03": [0,0,2,2,4,0.5,0,0,0,0,0,0,0,0,0,2,0,0,4,0],
+        }
+
+        DF5_W = {"APO12": [4,1], "APO13": [4,1], "DSS05": [3,1], "MEA03": [3,1]}
+        DF6_W = {"APO12": [4,2,1], "APO13": [1.5,1,1], "DSS05": [2,1,1], "MEA03": [4,2,1]}
+        DF7_W = {"APO12": [1,2.5,1,3], "APO13": [1,2,1.5,3], "DSS05": [1.5,2.5,1.5,3.5], "MEA03": [1,1,1,1.5]}
+        DF8_W = {"APO12": [2,2,1], "APO13": [1,1,1], "DSS05": [1,1,1], "MEA03": [1,1,1]}
+        DF9_W = {"APO12": [1,1.5,1], "APO13": [1,1,1], "DSS05": [1,1,1], "MEA03": [1,1,1]}
+        DF10_W = {"APO12": [2,1.5,1], "APO13": [1,1,1], "DSS05": [1.5,1,1], "MEA03": [1,1,1]}
+
+        def calc_df_map_score(domain):
+            score = 0.0
+
+            if df1_scores:
+                dom_cat = max(df1_scores, key=df1_scores.get)
+                matched_idx = 0
+                for ci, cat in enumerate(DF1_CATS):
+                    if any(w.lower() in dom_cat.lower() for w in cat.split()[:2]):
+                        matched_idx = ci
+                        break
+                score += DF1_W[domain][matched_idx]
+
+            df2_norm = (df2_avg - 1) / 4.0 if df2_avg > 1 else 0
+            df2_domain_max = {"APO12": 4, "APO13": 3, "DSS05": 4, "MEA03": 3}
+            score += round(df2_norm * df2_domain_max.get(domain, 2), 2)
+
+            for i, item_name in enumerate(DF3_ITEMS):
+                w = DF3_W[domain][i]
+                if w == 0:
+                    continue
+                matched_rating = 0
+                for key, val in df3_ratings.items():
+                    if any(kw.lower() in key.lower() for kw in item_name.split()[:2]):
+                        matched_rating = val
+                        break
+                score += round((matched_rating / 25.0) * w, 4)
+
+            for i, item_name in enumerate(DF4_ITEMS):
+                w = DF4_W[domain][i]
+                if w == 0:
+                    continue
+                matched_val = 0
+                for key, val in df4_vals.items():
+                    if any(kw.lower() in key.lower() for kw in item_name.split()[:3]):
+                        matched_val = val
+                        break
+                norm = (matched_val - 1) / 2.0 if matched_val > 1 else 0
+                score += round(norm * w, 4)
+
+            df5_pct_norm = [df5_high/100.0, df5_normal/100.0]
+            score += sum(df5_pct_norm[i] * DF5_W[domain][i] for i in range(2))
+
+            df6_pct_norm = [df6_high/100.0, df6_normal/100.0, df6_low/100.0]
+            score += sum(df6_pct_norm[i] * DF6_W[domain][i] for i in range(3))
+
+            df7_vals_norm = [(v-1)/4.0 if v and v > 1 else 0 for v in [df7_support, df7_factory, df7_turnaround, df7_strategic]]
+            score += sum(df7_vals_norm[i] * DF7_W[domain][i] for i in range(4))
+
+            df8_pct_norm = [df8_out/100.0, df8_cloud/100.0, df8_in/100.0]
+            score += sum(df8_pct_norm[i] * DF8_W[domain][i] for i in range(3))
+
+            df9_pct_norm = [df9_agile/100.0, df9_devops/100.0, df9_trad/100.0]
+            score += sum(df9_pct_norm[i] * DF9_W[domain][i] for i in range(3))
+
+            df10_pct_norm = [df10_first/100.0, df10_follow/100.0, df10_slow/100.0]
+            score += sum(df10_pct_norm[i] * DF10_W[domain][i] for i in range(3))
+
+            return round(score, 2)
+
+        domain_scores = {d: calc_df_map_score(d) for d in DOMAINS}
+        max_score = max(domain_scores.values()) if domain_scores and max(domain_scores.values()) > 0 else 1
+        domain_scores_pct = {d: round((s / max_score) * 100, 1) for d, s in domain_scores.items()}
+        ranked = sorted(domain_scores_pct.items(), key=lambda x: x[1], reverse=True)
+
+        dcols = st.columns(4)
+        domain_colors = {
+            "APO12": ("kpi-card-cobit", "🔵"),
+            "APO13": ("kpi-card-fuzzy", "🟣"),
+            "DSS05": ("kpi-card-teal", "🟢"),
+            "MEA03": ("kpi-card-gold", "🟡"),
+        }
+        for i, (dom, pct) in enumerate(ranked):
+            cls, emoji = domain_colors.get(dom, ("kpi-card-cobit", "⚫"))
+            with dcols[i]:
+                rank_label = ["🥇 #1", "🥈 #2", "🥉 #3", "  #4"][i]
+                st.markdown(f"""
+                <div class="kpi-card {cls}">
+                    <div class="kpi-title">{emoji} {dom} — {DOMAINS[dom]}</div>
+                    <div class="kpi-value">{pct}</div>
+                    <div class="kpi-desc">{rank_label} Prioritas  |  Skor Raw: {domain_scores[dom]:.2f}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown("<h3 style='font-size:1.05rem; font-weight:700; color:#0F172A; margin-bottom:10px;'>📊 Tabel Skor Domain — Design Factor Map</h3>", unsafe_allow_html=True)
+        df_map_table = pd.DataFrame([
+            {
+                "Prioritas": ["🥇","🥈","🥉",""][i],
+                "Domain": dom,
+                "Nama Domain": DOMAINS[dom],
+                "Skor Total (Raw)": domain_scores[dom],
+                "Skor Relatif (%)": domain_scores_pct[dom],
+            }
+            for i, (dom, _) in enumerate(ranked)
+        ])
+        st.dataframe(df_map_table, use_container_width=True, hide_index=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_map1, col_map2 = st.columns([1.4, 1])
+
+        with col_map1:
+            st.markdown("""
+            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:14px 16px; margin-bottom:12px;">
+                <strong style="color:#0F172A; font-size:0.95rem;">🏆 Ranking Skor Domain Berdasarkan DF Map</strong>
+            </div>
+            """, unsafe_allow_html=True)
+            fig_map, ax_map = plt.subplots(figsize=(6, 3.5), dpi=150)
+            fig_map.patch.set_facecolor('#FFFFFF')
+            ax_map.set_facecolor('#F8FAFC')
+            dom_names = [f"{d}\n{DOMAINS[d]}" for d, _ in ranked]
+            dom_pcts  = [p for _, p in ranked]
+            bar_cols  = ['#1E3A8A', '#0284C7', '#0D9488', '#D97706']
+            bars_map  = ax_map.barh(dom_names, dom_pcts, color=bar_cols, height=0.5, edgecolor='none')
+            for bar in bars_map:
+                w = bar.get_width()
+                ax_map.text(w + 1.5, bar.get_y() + bar.get_height()/2, f'{w:.1f}%', va='center', ha='left', fontsize=9, fontweight='bold', color='#0F172A')
+            ax_map.set_xlim(0, 120)
+            ax_map.set_xlabel("Skor Relatif (%)", fontsize=8, color='#64748B')
+            ax_map.grid(axis='x', linestyle='--', alpha=0.4, color='#CBD5E1')
+            ax_map.spines['top'].set_visible(False)
+            ax_map.spines['right'].set_visible(False)
+            ax_map.spines['left'].set_color('#E2E8F0')
+            ax_map.spines['bottom'].set_color('#E2E8F0')
+            ax_map.tick_params(axis='y', labelsize=7.5, colors='#0F172A')
+            ax_map.tick_params(axis='x', labelsize=7, colors='#64748B')
+            fig_map.tight_layout()
+            st.pyplot(fig_map, use_container_width=True)
+            plt.close(fig_map)
+
+        with col_map2:
+            st.markdown("""
+            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:16px 18px;">
+                <strong style="color:#0F172A; font-size:0.95rem;">📌 Rekomendasi Prioritas Domain</strong>
+                <hr style="margin:10px 0; border-color:#E2E8F0;">
+            """, unsafe_allow_html=True)
+            interp = {
+                "APO12": "Manajemen Risiko TI membutuhkan perhatian khusus sesuai profil risiko institusi.",
+                "APO13": "Keamanan Informasi harus diperkuat seiring ancaman siber yang tinggi.",
+                "DSS05": "Operasional Layanan Keamanan perlu distandarisasi dan dimonitor rutin.",
+                "MEA03": "Kepatuhan Regulasi Eksternal wajib dipenuhi sesuai persyaratan akreditasi.",
+            }
+            for i, (dom, pct) in enumerate(ranked):
+                medal = ["🥇","🥈","🥉","  "][i]
+                st.markdown(f"""
+                <div style="margin-bottom:10px; padding:8px 10px; background:#F8FAFC; border-left:3px solid {'#1E3A8A' if i==0 else '#0284C7' if i==1 else '#0D9488' if i==2 else '#D97706'}; border-radius:0 6px 6px 0;">
+                    <div style="font-size:0.8rem; font-weight:700; color:#0F172A;">{medal} {dom} — Skor: {pct}%</div>
+                    <div style="font-size:0.75rem; color:#64748B; margin-top:3px;">{interp.get(dom,'')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------------------------------------
 # MODUL 3: RIWAYAT DATABASE SQLITE

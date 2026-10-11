@@ -72,12 +72,31 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS individual_responses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            fullname TEXT NOT NULL,
+            position TEXT NOT NULL,
+            df_code TEXT NOT NULL,
+            indicator_name TEXT NOT NULL,
+            score_val REAL,
+            impact_val REAL,
+            likelihood_val REAL,
+            submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, df_code, indicator_name)
+        )
+    ''')
+
     # Auto-seed akun sistem permanen agar tidak pernah hilang saat cloud reboot/redeploy
     system_accounts = [
         ("admin", "Novanca Tulende", "Kepala SIU UNKLAB", "Admin", hash_password("admin123")),
         ("admin1", "Novanca Tulende", "IT Supervisor UNKLAB", "Admin", hash_password("admin123")),
-        ("responden", "Myeclle Kaseger", "Auditor Internal", "Responden", hash_password("responden123")),
-        ("responden1", "Myeclle Kaseger", "Auditor Internal", "Responden", hash_password("responden123")),
+        ("responden1", "Douglas Rasuh", "Dept. SIU (Accountable)", "Responden", hash_password("responden123")),
+        ("responden2", "Enrico Djimesha", "Dept. IT (Responsible)", "Responden", hash_password("responden123")),
+        ("responden", "Myeclle Kaseger", "Auditor Internal UNKLAB", "Responden", hash_password("responden123")),
     ]
     for u, name, pos, role, pw_hash in system_accounts:
         cursor.execute(
@@ -86,10 +105,48 @@ def init_db():
                ON CONFLICT(username) DO UPDATE SET 
                    password_hash = excluded.password_hash,
                    fullname = excluded.fullname,
+                   position = excluded.position,
                    role = excluded.role""",
             (u, name, pos, role, pw_hash)
         )
     conn.commit()
+
+    # Pre-seed verified responses for responden1 & responden2 if table is empty
+    cursor.execute("SELECT COUNT(*) FROM individual_responses")
+    if cursor.fetchone()[0] == 0:
+        seed_path = os.path.join(os.path.dirname(__file__), "seed_data.json")
+        if os.path.exists(seed_path):
+            try:
+                import json
+                with open(seed_path, 'r', encoding='utf-8') as sf:
+                    seed_payload = json.load(sf)
+                
+                cursor.execute("SELECT id, username, fullname, position FROM users WHERE username IN ('responden1', 'responden2')")
+                u_map = {row[1]: (row[0], row[2], row[3]) for row in cursor.fetchall()}
+                
+                for key, user_key in [("R1", "responden1"), ("R2", "responden2")]:
+                    if user_key in u_map and key in seed_payload:
+                        uid, fname, pos = u_map[user_key]
+                        for df_c, items_dict in seed_payload[key].items():
+                            for ind_name, val in items_dict.items():
+                                if isinstance(val, dict):
+                                    imp = val.get("impact")
+                                    lik = val.get("likelihood")
+                                    sc = imp * lik if (imp is not None and lik is not None) else None
+                                else:
+                                    sc = val
+                                    imp = None
+                                    lik = None
+                                cursor.execute('''
+                                    INSERT INTO individual_responses 
+                                    (user_id, username, fullname, position, df_code, indicator_name, score_val, impact_val, likelihood_val)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    ON CONFLICT(user_id, df_code, indicator_name) DO NOTHING
+                                ''', (uid, user_key, fname, pos, df_c, ind_name, sc, imp, lik))
+                conn.commit()
+            except Exception:
+                pass
+
     conn.close()
 
 def register_user(username, fullname, position, role, password):
@@ -282,6 +339,160 @@ def calc_risk_profile(i_r1, i_r2, l_r1, l_r2):
         "likelihood_val": likelihood_val,
         "risk_rating": risk_rating
     }
+
+def save_individual_answers(user_id, username, fullname, position, answers_dict):
+    """Menyimpan seluruh jawaban kuesioner dari seorang responden ke database."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    for df_code, items in answers_dict.items():
+        for item in items:
+            indicator = item['indicator']
+            score = item.get('score')
+            impact = item.get('impact')
+            likelihood = item.get('likelihood')
+            cursor.execute('''
+                INSERT INTO individual_responses 
+                (user_id, username, fullname, position, df_code, indicator_name, score_val, impact_val, likelihood_val, submitted_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, df_code, indicator_name) DO UPDATE SET
+                    fullname = excluded.fullname,
+                    position = excluded.position,
+                    score_val = excluded.score_val,
+                    impact_val = excluded.impact_val,
+                    likelihood_val = excluded.likelihood_val,
+                    submitted_at = CURRENT_TIMESTAMP
+            ''', (user_id, username, fullname, position, df_code, indicator, score, impact, likelihood))
+    conn.commit()
+    conn.close()
+    return True
+
+def get_user_submission_status(user_id):
+    """Mengecek apakah responden tertentu sudah menyelesaikan seluruh DF1-DF10."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(DISTINCT df_code), MAX(submitted_at) FROM individual_responses WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row and row[0] >= 10:
+        return True, row[1]
+    return False, None
+
+def get_user_saved_answers(user_id):
+    """Mengambil dictionary jawaban individual responden dari database."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT df_code, indicator_name, score_val, impact_val, likelihood_val FROM individual_responses WHERE user_id = ?", (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    saved = {}
+    for df_code, ind, sc, imp, lik in rows:
+        if df_code not in saved:
+            saved[df_code] = {}
+        saved[df_code][ind] = {"score": sc, "impact": imp, "likelihood": lik}
+    return saved
+
+def get_all_submitted_respondents():
+    """Mengambil daftar seluruh responden yang telah mengisi kuesioner."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT user_id, username, fullname, position, COUNT(DISTINCT df_code) as df_count, MAX(submitted_at) as last_submit
+        FROM individual_responses
+        GROUP BY user_id, username, fullname, position
+        ORDER BY last_submit DESC
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    return [
+        {
+            "user_id": r[0],
+            "username": r[1],
+            "fullname": r[2],
+            "position": r[3],
+            "df_count": r[4],
+            "submitted_at": r[5]
+        }
+        for r in rows
+    ]
+
+def aggregate_two_respondents(user_id_1, user_id_2, df_definitions):
+    """Menggabungkan data kuesioner dari dua responden menggunakan Fuzzy TFN & formula COBIT 2019."""
+    ans1 = get_user_saved_answers(user_id_1)
+    ans2 = get_user_saved_answers(user_id_2)
+    
+    aggregated = {}
+    for df_code, df_info in df_definitions.items():
+        is_risk = (df_info["type"] == "risk_profile")
+        is_fuzzy = (df_info["type"] == "fuzzy")
+        items = df_info["items"]
+        rows = []
+        
+        for item in items:
+            a1_item = ans1.get(df_code, {}).get(item, {})
+            a2_item = ans2.get(df_code, {}).get(item, {})
+            
+            if is_risk:
+                ir1 = a1_item.get("impact")
+                lr1 = a1_item.get("likelihood")
+                ir2 = a2_item.get("impact")
+                lr2 = a2_item.get("likelihood")
+                
+                if any(v is None for v in [ir1, ir2, lr1, lr2]):
+                    rows.append({
+                        "indicator": item, "method": "Risk Profile (Fuzzy TFN)",
+                        "r1": None, "r2": None, "final": None,
+                        "final_display": "Belum Lengkap", "rounded_toolkit": "-",
+                        "ir1": ir1, "ir2": ir2, "lr1": lr1, "lr2": lr2
+                    })
+                else:
+                    res = calc_risk_profile(ir1, ir2, lr1, lr2)
+                    rows.append({
+                        "indicator": item, "method": "Risk Profile (Fuzzy TFN)",
+                        "r1": res["impact_val"], "r2": res["likelihood_val"],
+                        "final": float(res["risk_rating"]),
+                        "final_display": str(res["risk_rating"]),
+                        "rounded_toolkit": str(res["risk_rating"]),
+                        "ir1": ir1, "ir2": ir2, "lr1": lr1, "lr2": lr2,
+                        "impact_val": res["impact_val"], "likelihood_val": res["likelihood_val"],
+                        "risk_rating": res["risk_rating"]
+                    })
+            elif is_fuzzy:
+                r1 = a1_item.get("score")
+                r2 = a2_item.get("score")
+                if r1 is None or r2 is None:
+                    rows.append({
+                        "indicator": item, "method": "Fuzzy Logic TFN",
+                        "r1": r1, "r2": r2, "final": None,
+                        "final_display": "Belum Lengkap", "rounded_toolkit": "-"
+                    })
+                else:
+                    final_sc = calc_fuzzy_5(r1, r2) if df_info["scale"] == 5 else calc_fuzzy_3(r1, r2)
+                    rows.append({
+                        "indicator": item, "method": "Fuzzy Logic TFN",
+                        "r1": r1, "r2": r2, "final": final_sc,
+                        "final_display": f"{final_sc:.2f}",
+                        "rounded_toolkit": str(int(round(final_sc)))
+                    })
+            else:
+                r1 = a1_item.get("score")
+                r2 = a2_item.get("score")
+                if r1 is None or r2 is None:
+                    rows.append({
+                        "indicator": item, "method": "Direct Percentage (%)",
+                        "r1": r1, "r2": r2, "final": None,
+                        "final_display": "Belum Lengkap", "rounded_toolkit": "-"
+                    })
+                else:
+                    final_sc = calc_percentage_avg(r1, r2)
+                    rows.append({
+                        "indicator": item, "method": "Direct Percentage (%)",
+                        "r1": r1, "r2": r2, "final": final_sc,
+                        "final_display": f"{final_sc:.1f}%",
+                        "rounded_toolkit": f"{int(round(final_sc))}%"
+                    })
+        aggregated[df_code] = rows
+    return aggregated
+
 
 def get_rating_level_cobit(pct):
     if pct < 15: return "N - Not Achieved (0-14%)", 1

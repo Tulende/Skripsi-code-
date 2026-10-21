@@ -90,6 +90,21 @@ def init_db():
         )
     ''')
 
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS individual_checklist_responses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            fullname TEXT NOT NULL,
+            position TEXT NOT NULL,
+            domain_code TEXT NOT NULL,
+            question_num INTEGER NOT NULL,
+            answer_val INTEGER NOT NULL,
+            submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, domain_code, question_num)
+        )
+    ''')
+
     # Auto-seed akun sistem permanen agar tidak pernah hilang saat cloud reboot/redeploy
     system_accounts = [
         ("admin", "Novanca Tulende", "Kepala SIU UNKLAB", "Admin", hash_password("admin123")),
@@ -143,6 +158,36 @@ def init_db():
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                                     ON CONFLICT(user_id, df_code, indicator_name) DO NOTHING
                                 ''', (uid, user_key, fname, pos, df_c, ind_name, sc, imp, lik))
+                conn.commit()
+            except Exception:
+                pass
+
+    # Pre-seed verified checklist responses for responden1 & responden2 if table is empty
+    cursor.execute("SELECT COUNT(*) FROM individual_checklist_responses")
+    if cursor.fetchone()[0] == 0:
+        seed_path = os.path.join(os.path.dirname(__file__), "seed_data.json")
+        if os.path.exists(seed_path):
+            try:
+                import json
+                with open(seed_path, 'r', encoding='utf-8') as sf:
+                    seed_payload = json.load(sf)
+                
+                checklists = seed_payload.get("checklist_wawancara2", {})
+                cursor.execute("SELECT id, username, fullname, position FROM users WHERE username IN ('responden1', 'responden2')")
+                u_map = {row[1]: (row[0], row[2], row[3]) for row in cursor.fetchall()}
+                
+                for key, user_key in [("R1", "responden1"), ("R2", "responden2")]:
+                    if user_key in u_map and key in checklists:
+                        uid, fname, pos = u_map[user_key]
+                        for d_code, q_dict in checklists[key].items():
+                            for q_num_str, ans_val in q_dict.items():
+                                q_num = int(q_num_str)
+                                cursor.execute('''
+                                    INSERT INTO individual_checklist_responses
+                                    (user_id, username, fullname, position, domain_code, question_num, answer_val)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                    ON CONFLICT(user_id, domain_code, question_num) DO NOTHING
+                                ''', (uid, user_key, fname, pos, d_code, q_num, int(ans_val)))
                 conn.commit()
             except Exception:
                 pass
@@ -415,6 +460,140 @@ def get_all_submitted_respondents():
         for r in rows
     ]
 
+# ========================================================
+# WAWANCARA 2: CHECKLIST CAPABILITY LEVEL (BINER YA / TIDAK)
+# ========================================================
+
+def load_checklist_questions():
+    """Memuat daftar 124 butir checklist dari file parsed_checklist.json."""
+    import json
+    json_path = os.path.join(os.path.dirname(__file__), "parsed_checklist.json")
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+def save_individual_checklist(user_id, username, fullname, position, checklist_dict):
+    """
+    Menyimpan seluruh jawaban checklist Wawancara 2 (Ya=1, Tidak=0) dari seorang responden ke database.
+    checklist_dict: {domain_code: {question_num: int(0 or 1)}}
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    for domain_code, q_map in checklist_dict.items():
+        for q_num, ans_val in q_map.items():
+            cursor.execute('''
+                INSERT INTO individual_checklist_responses 
+                (user_id, username, fullname, position, domain_code, question_num, answer_val, submitted_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, domain_code, question_num) DO UPDATE SET
+                    fullname = excluded.fullname,
+                    position = excluded.position,
+                    answer_val = excluded.answer_val,
+                    submitted_at = CURRENT_TIMESTAMP
+            ''', (user_id, username, fullname, position, domain_code, int(q_num), int(ans_val)))
+    conn.commit()
+    conn.close()
+    return True
+
+def get_user_checklist_answers(user_id):
+    """Mengambil dictionary jawaban checklist Wawancara 2 dari seorang responden."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT domain_code, question_num, answer_val FROM individual_checklist_responses WHERE user_id = ?", (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    res = {}
+    for d_code, q_num, ans in rows:
+        if d_code not in res:
+            res[d_code] = {}
+        res[d_code][q_num] = ans
+    return res
+
+def get_user_checklist_status(user_id):
+    """Mengecek apakah responden telah menyelesaikan checklist Wawancara 2 (124 butir)."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*), MAX(submitted_at) FROM individual_checklist_responses WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    count = row[0] if row else 0
+    max_time = row[1] if row else None
+    return (count >= 124), count, max_time
+
+def get_all_checklist_submitted_respondents():
+    """Mengambil daftar seluruh responden yang telah mengisi checklist Wawancara 2."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT user_id, username, fullname, position, COUNT(*) as q_count, MAX(submitted_at) as last_submit
+        FROM individual_checklist_responses
+        GROUP BY user_id, username, fullname, position
+        ORDER BY last_submit DESC
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    return [
+        {
+            "user_id": r[0],
+            "username": r[1],
+            "fullname": r[2],
+            "position": r[3],
+            "q_count": r[4],
+            "submitted_at": r[5]
+        }
+        for r in rows
+    ]
+
+def calculate_domain_checklist_score(domain_code, user_answers_dict, all_questions_dict=None):
+    """
+    Menghitung skor capability level suatu domain berdasarkan jawaban checklist Wawancara 2.
+    Formula COBIT 2019 (Tanpa Fuzzy):
+    Pencapaian (%) = (Total Jawaban 'Ya' / Total Pertanyaan) * 100%
+    """
+    if all_questions_dict is None:
+        all_questions_dict = load_checklist_questions()
+    questions = all_questions_dict.get(domain_code, [])
+    total_q = len(questions)
+    if total_q == 0:
+        return {
+            "domain_code": domain_code,
+            "total": 0,
+            "ya": 0,
+            "tidak": 0,
+            "pct": 0.0,
+            "rating": "N - Not Achieved (0-14%)",
+            "as_is_lvl": 0
+        }
+    
+    domain_answers = user_answers_dict.get(domain_code, {})
+    ya_count = sum(1 for q in questions if domain_answers.get(q['num']) == 1)
+    tidak_count = total_q - ya_count
+    pct = round((ya_count / total_q) * 100.0, 2)
+    rating, as_is_lvl = get_rating_level_cobit(pct)
+    return {
+        "domain_code": domain_code,
+        "total": total_q,
+        "ya": ya_count,
+        "tidak": tidak_count,
+        "pct": pct,
+        "rating": rating,
+        "as_is_lvl": as_is_lvl
+    }
+
+def get_preset_skripsi_capability():
+    """Mengembalikan data pencapaian capability level riil skripsi UNKLAB (Novanca Tulende)."""
+    return {
+        "APO12": {"ya": 3, "total": 36, "pct": 8.00, "rating": "N - Not Achieved (0-14%)", "as_is": 0},
+        "APO13": {"ya": 8, "total": 19, "pct": 42.00, "rating": "P - Partially Achieved (15-49%)", "as_is": 1},
+        "DSS05": {"ya": 37, "total": 49, "pct": 75.00, "rating": "L - Largely Achieved (50-84%)", "as_is": 2},
+        "MEA03": {"ya": 6, "total": 20, "pct": 31.00, "rating": "P - Partially Achieved (15-49%)", "as_is": 1},
+        "average_pct": 39.00,
+        "overall_as_is": 1,
+        "overall_target": 4,
+        "overall_gap": 3
+    }
+
 def aggregate_two_respondents(user_id_1, user_id_2, df_definitions):
     """Menggabungkan data kuesioner dari dua responden menggunakan Fuzzy TFN & formula COBIT 2019."""
     ans1 = get_user_saved_answers(user_id_1)
@@ -495,10 +674,10 @@ def aggregate_two_respondents(user_id_1, user_id_2, df_definitions):
 
 
 def get_rating_level_cobit(pct):
-    if pct < 15: return "N - Not Achieved (0-14%)", 1
+    if pct < 15: return "N - Not Achieved (0-14%)", 0
     elif pct < 50: return "P - Partially Achieved (15-49%)", 1
-    elif pct < 85: return "L - Largely Achieved (50-84%)", 1
-    else: return "F - Fully Achieved (85-100%)", 2
+    elif pct < 85: return "L - Largely Achieved (50-84%)", 2
+    else: return "F - Fully Achieved (85-100%)", 3
 
 def generate_pdf_report(evaluator_name, evaluator_pos, capability_data_list):
     buffer = io.BytesIO()

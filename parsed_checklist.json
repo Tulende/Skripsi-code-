@@ -1,0 +1,754 @@
+{
+  "APO12": [
+    {
+      "num": 1,
+      "practice": "APO12.01",
+      "question": "Apakah sudah ada cara yang baku untuk mengumpulkan, mengelompokkan, dan menganalisis data risiko TI?",
+      "desc_en": "Establish and maintain a method for the collection, classification and analysis of I&T risk-related data. 2"
+    },
+    {
+      "num": 2,
+      "practice": "APO12",
+      "question": "Apakah data risiko TI yang penting dari dalam dan luar organisasi dicatat secara rutin?",
+      "desc_en": "Record relevant and significant I&T risk-related data on the enterprise's internal and external operating environment. APO12.03 — Maintain a Risk Profile (Memelihara Profil Risiko)"
+    },
+    {
+      "num": 3,
+      "practice": "APO12.03",
+      "question": "Apakah daftar proses bisnis dan ketergantungannya pada layanan TI sudah didokumentasikan, termasuk staf, aplikasi, infrastruktur, dan pihak ketiga yang mendukung?",
+      "desc_en": "Inventory business processes and document their dependency on I&T service management processes and IT infrastructure resources. Identify supporting personnel, applications, infrast"
+    },
+    {
+      "num": 4,
+      "practice": "APO12",
+      "question": "Apakah layanan TI dan sumber daya yang penting bagi kelangsungan operasional sudah diidentifikasi dan potensi kelemahannya sudah dianalisis?",
+      "desc_en": "Determine and agree on which I&T services and IT infrastructure resources are essential to sustain the operation of business processes. Analyze dependencies and identify weak links"
+    },
+    {
+      "num": 5,
+      "practice": "APO12",
+      "question": "Apakah risiko-risiko yang ada saat ini sudah dikelompokkan berdasarkan jenis, unit bisnis, dan bagian kerja yang terkait?",
+      "desc_en": "Aggregate current risk scenarios by category, business line and functional area. APO12.05 — Define a Risk Management Action Portfolio (Portofolio Aksi Manajemen Risiko) === PAGE 2 "
+    },
+    {
+      "num": 6,
+      "practice": "APO12.05",
+      "question": "Apakah daftar langkah-langkah pengendalian untuk mengurangi risiko sudah dikelola dan dikaitkan dengan risiko TI yang spesifik?",
+      "desc_en": "Maintain an inventory of control activities that are in place to mitigate risk and that enable risk to be taken in line with the risk appetite and tolerance. Classify control activ"
+    },
+    {
+      "num": 7,
+      "practice": "APO12.01",
+      "question": "Apakah sudah ada pengelompokan/kategori risiko yang digunakan secara konsisten untuk mendefinisikan jenis risiko, dampak, dan kemungkinan terjadinya?",
+      "desc_en": "Adopt or define a risk taxonomy for consistent definitions of risk scenarios and impact and likelihood categories. 8"
+    },
+    {
+      "num": 8,
+      "practice": "APO12",
+      "question": "Apakah data kejadian risiko yang sudah terjadi atau berpotensi terjadi dicatat sesuai dengan kategori dampak yang sudah ditetapkan?",
+      "desc_en": "Record data on risk events that have caused or may cause business impacts as per the impact categories defined in the risk taxonomy. Capture relevant data from related issues, inci"
+    },
+    {
+      "num": 9,
+      "practice": "APO12.02",
+      "question": "Apakah cakupan penilaian risiko sudah ditetapkan dengan mempertimbangkan semua faktor risiko dan aset bisnis yang penting?",
+      "desc_en": "Define the appropriate scope of risk analysis efforts, considering all risk factors and/or the business criticality of assets. 10"
+    },
+    {
+      "num": 10,
+      "practice": "APO12",
+      "question": "Apakah kemungkinan risiko TI diperbarui secara berkala, termasuk potensi kerugian, risiko terhadap reputasi, dan risiko yang dapat berdampak berantai?",
+      "desc_en": "Build and regularly update I&T risk scenarios; I&T-related loss exposures; and scenarios regarding reputational risk, including compound scenarios of cascading and/or coincidental "
+    },
+    {
+      "num": 11,
+      "practice": "APO12",
+      "question": "Apakah seberapa sering dan seberapa besar potensi kerugian dari setiap risiko sudah diperkirakan dengan mempertimbangkan faktor risiko dan langkah pengendalian yang ada?",
+      "desc_en": "Estimate the frequency (or likelihood) and magnitude of loss or gain associated with I&T risk scenarios. Take into account all applicable risk factors and evaluate known operationa"
+    },
+    {
+      "num": 12,
+      "practice": "APO12",
+      "question": "Apakah risiko yang ada saat ini sudah dibandingkan dengan batas risiko yang dapat diterima organisasi, dan risiko yang melebihi batas tersebut sudah diidentifikasi?",
+      "desc_en": "Compare current risk (I&T-related loss exposure) to risk appetite and acceptable risk tolerance. Identify unacceptable or elevated risk. 13"
+    },
+    {
+      "num": 13,
+      "practice": "APO12",
+      "question": "Apakah sudah ada usulan tindakan penanganan untuk risiko yang melebihi batas toleransi organisasi?",
+      "desc_en": "Propose risk responses for risk exceeding risk appetite and tolerance levels. 14"
+    },
+    {
+      "num": 14,
+      "practice": "APO12",
+      "question": "Apakah kebutuhan utama untuk proyek atau program yang menjalankan tindakan penanganan risiko sudah ditetapkan, termasuk pengendalian yang diharapkan?",
+      "desc_en": "Specify high-level requirements for projects or programs that will implement the selected risk responses. Identify requirements and expectations for appropriate key controls for ri"
+    },
+    {
+      "num": 15,
+      "practice": "APO12.03",
+      "question": "Apakah semua informasi risiko secara rutin dikumpulkan dan dirangkum menjadi satu gambaran risiko organisasi secara menyeluruh?",
+      "desc_en": "Regularly capture all risk profile information and consolidate it into an aggregated risk profile. 16"
+    },
+    {
+      "num": 16,
+      "practice": "APO12",
+      "question": "Apakah semua informasi risiko secara rutin dikumpulkan dan dirangkum menjadi satu gambaran risiko organisasi secara menyeluruh?",
+      "desc_en": "Capture information on the status of the risk action plan for inclusion in the I&T risk profile of the enterprise. APO12.04 — Articulate Risk (Mengomunikasikan Risiko) 17"
+    },
+    {
+      "num": 17,
+      "practice": "APO12.04",
+      "question": "Apakah hasil analisis risiko dilaporkan kepada semua pihak yang berkepentingan dalam format yang mudah dipahami dan mendukung pengambilan keputusan, termasuk kemungkinan dan potensi kerugiannya?",
+      "desc_en": "Report the results of risk analysis to all affected stakeholders in terms and formats useful to support enterprise decisions. Whenever possible, include probabilities and ranges of"
+    },
+    {
+      "num": 18,
+      "practice": "APO12",
+      "question": "Apakah hasil analisis risiko dilaporkan kepada semua pihak yang berkepentingan dalam format yang mudah dipahami dan mendukung pengambilan keputusan, termasuk kemungkinan dan potensi kerugiannya?",
+      "desc_en": "Provide decision makers with an understanding of worst-case and most-probable scenarios, I&T-related loss exposures and significant reputation, legal and regulatory considerations,"
+    },
+    {
+      "num": 19,
+      "practice": "APO12",
+      "question": "Apakah hasil analisis risiko dilaporkan kepada semua pihak yang berkepentingan dalam format yang mudah dipahami dan mendukung pengambilan keputusan, termasuk kemungkinan dan potensi kerugiannya?",
+      "desc_en": "Report the current risk profile to all stakeholders. Include information on the effectiveness of the risk management process, control effectiveness, gaps, inconsistencies, redundan"
+    },
+    {
+      "num": 20,
+      "practice": "APO12",
+      "question": "Apakah hasil analisis risiko dilaporkan kepada semua pihak yang berkepentingan dalam format yang mudah dipahami dan mendukung pengambilan keputusan, termasuk kemungkinan dan potensi kerugiannya?",
+      "desc_en": "On a periodic basis, for areas with relative risk and risk capacity parity, identify I&T-related opportunities that would allow the acceptance of greater risk and enhanced growth a"
+    },
+    {
+      "num": 21,
+      "practice": "APO12.05",
+      "question": "Apakah hasil analisis risiko dilaporkan kepada semua pihak yang berkepentingan dalam format yang mudah dipahami dan mendukung pengambilan keputusan, termasuk kemungkinan dan potensi kerugiannya?",
+      "desc_en": "Determine whether each organizational entity monitors risk and accepts accountability for operating within its individual and portfolio tolerance levels. 22"
+    },
+    {
+      "num": 22,
+      "practice": "APO12",
+      "question": "Apakah sudah ada sekumpulan usulan proyek yang seimbang antara mengurangi risiko dan membuka peluang strategis, dengan mempertimbangkan biaya, manfaat, dan dampaknya terhadap gambaran risiko organisasi?",
+      "desc_en": "Define a balanced set of project proposals designed to reduce risk and/or projects that enable strategic enterprise opportunities, considering costs, benefits, effect on current ri"
+    },
+    {
+      "num": 23,
+      "practice": "APO12.06",
+      "question": "Apakah sudah ada sekumpulan usulan proyek yang seimbang antara mengurangi risiko dan membuka peluang strategis, dengan mempertimbangkan biaya, manfaat, dan dampaknya terhadap gambaran risiko organisasi?",
+      "desc_en": "Prepare, maintain and test plans that document the specific steps to take when a risk event may cause a significant operational or development incident with serious business impact"
+    },
+    {
+      "num": 24,
+      "practice": "APO12",
+      "question": "Apakah tindakan penanganan yang sesuai sudah diterapkan untuk memperkecil dampak ketika insiden risiko benar-benar terjadi?",
+      "desc_en": "Apply the appropriate response plan to minimize the impact when risk incidents occur. Capability Level 4 APO12.01 — Collect Data (lanjutan Level 4) 25"
+    },
+    {
+      "num": 25,
+      "practice": "APO12.01",
+      "question": "Apakah tindakan penanganan yang sesuai sudah diterapkan untuk memperkecil dampak ketika insiden risiko benar-benar terjadi?",
+      "desc_en": "Survey and analyze the historical I&T risk data and loss experience from externally available data and trends, industry peers through industry-based event logs, databases, and indu"
+    },
+    {
+      "num": 26,
+      "practice": "APO12",
+      "question": "Apakah tindakan penanganan yang sesuai sudah diterapkan untuk memperkecil dampak ketika insiden risiko benar-benar terjadi?",
+      "desc_en": "For similar classes of events, organize the collected data and highlight contributing factors. Determine common contributing factors across multiple events. 27"
+    },
+    {
+      "num": 27,
+      "practice": "APO12",
+      "question": "Apakah kondisi-kondisi yang hadir atau tidak hadir saat kejadian risiko terjadi sudah diteliti, dan pengaruhnya terhadap seberapa sering dan seberapa besar kerugian yang timbul sudah dianalisis?",
+      "desc_en": "Determine the specific conditions that existed or were absent when risk events occurred and the way the conditions affected event frequency and loss magnitude. 28"
+    },
+    {
+      "num": 28,
+      "practice": "APO12",
+      "question": "Apakah analisis kejadian dan faktor risiko dilakukan secara berkala untuk mengidentifikasi isu risiko baru atau yang muncul?",
+      "desc_en": "Perform periodic event and risk factor analysis to identify new or emerging risk issues and to gain an understanding of the associated internal and external risk factors. APO12.02 "
+    },
+    {
+      "num": 29,
+      "practice": "APO12.02",
+      "question": "Apakah hasil analisis risiko dan penilaian dampak bisnis sudah diverifikasi kebenarannya sebelum digunakan sebagai dasar pengambilan keputusan?",
+      "desc_en": "Validate the risk analysis and business impact analysis (BIA) results before using them in decision making. Confirm that the analysis aligns with enterprise requirements and verify"
+    },
+    {
+      "num": 30,
+      "practice": "APO12.03",
+      "question": "Apakah sudah ada indikator-indikator risiko yang ditetapkan berdasarkan data risiko yang ada, untuk memudahkan pemantauan risiko dan kecenderungannya secara cepat?",
+      "desc_en": "Based on all risk profile data, define a set of risk indicators that allow the quick identification and monitoring of current risk and risk trends. 31"
+    },
+    {
+      "num": 31,
+      "practice": "APO12",
+      "question": "Apakah informasi kejadian risiko TI yang sudah benar-benar terjadi dicatat dan dimasukkan ke dalam gambaran risiko TI organisasi?",
+      "desc_en": "Capture information on I&T risk events that have materialized for inclusion in the IT risk profile of the enterprise. APO12.04 — Articulate Risk (lanjutan Level 4) 32"
+    },
+    {
+      "num": 32,
+      "practice": "APO12.04",
+      "question": "Apakah hasil penilaian dari pihak luar yang independen serta tinjauan audit internal sudah dimasukkan ke dalam gambaran risiko untuk menentukan apakah diperlukan analisis lebih lanjut?",
+      "desc_en": "Review the results of objective third-party assessments and internal audit and quality assurance reviews. Include them in the risk profile. Review identified gaps and I&T-related l"
+    },
+    {
+      "num": 33,
+      "practice": "APO12.06",
+      "question": "Apakah insiden sudah dikategorikan dan potensi kerugian TI dibandingkan dengan batas toleransi risiko, serta dampaknya terhadap bisnis sudah dikomunikasikan kepada pimpinan sebagai bagian dari pelaporan?",
+      "desc_en": "Categorize incidents and compare I&T-related loss exposures against risk tolerance thresholds. Communicate business impacts to decision makers as part of reporting and update the r"
+    },
+    {
+      "num": 34,
+      "practice": "APO12",
+      "question": "Apakah kejadian merugikan di masa lalu, kerugian yang dialami, dan peluang yang terlewatkan sudah ditelusuri untuk menemukan penyebab utamanya?",
+      "desc_en": "Examine past adverse events/losses and missed opportunities and determine root causes. Capability Level 5 APO12.02 — Analyze Risk (lanjutan Level 5) 35"
+    },
+    {
+      "num": 35,
+      "practice": "APO12.02",
+      "question": "Apakah keuntungan dan biaya dari berbagai pilihan penanganan risiko — seperti menghindari, mengurangi, mengalihkan, menerima, atau memanfaatkan risiko — sudah dianalisis untuk menentukan pilihan terbaik?",
+      "desc_en": "Analyze cost/benefit of potential risk response options such as avoid, reduce/mitigate, transfer/share, and accept and exploit/seize. Confirm the optimal risk response. APO12.06 — "
+    },
+    {
+      "num": 36,
+      "practice": "APO12.06",
+      "question": "Apakah penyebab utama masalah, kebutuhan penanganan risiko tambahan, dan usulan perbaikan proses sudah dikomunikasikan kepada pimpinan yang berwenang dan dimasukkan ke dalam proses pengelolaan risiko?",
+      "desc_en": "Communicate root cause, additional risk response requirements and process improvements to appropriate decision makers. Ensure that the cause, response requirements and process impr"
+    }
+  ],
+  "APO13": [
+    {
+      "num": 1,
+      "practice": "APO13.01",
+      "question": "Apakah ruang lingkup dan batasan Sistem Manajemen Keamanan Informasi (SMKI/ISMS) sudah ditetapkan, mencakup karakteristik organisasi, lokasi, aset, dan teknologi, termasuk alasan pengecualian jika ada?",
+      "desc_en": "Define the scope and boundaries of the information security management system (ISMS) in terms of the characteristics of the enterprise, the organization, its location, assets and technology."
+    },
+    {
+      "num": 2,
+      "practice": "APO13",
+      "question": "Apakah Sistem Manajemen Keamanan Informasi (ISMS) sudah ditetapkan sesuai dengan kebijakan organisasi dan kondisi operasional yang berlaku?",
+      "desc_en": "Define an ISMS in accordance with enterprise policy and the context in which the enterprise operates. 3"
+    },
+    {
+      "num": 3,
+      "practice": "APO13",
+      "question": "Apakah Sistem Manajemen Keamanan Informasi (ISMS) sudah ditetapkan sesuai dengan kebijakan organisasi dan kondisi operasional yang berlaku?",
+      "desc_en": "Align the ISMS with the overall enterprise approach to the management of security. 4"
+    },
+    {
+      "num": 4,
+      "practice": "APO13",
+      "question": "Apakah manajemen sudah memberikan otorisasi untuk mengimplementasikan, mengoperasikan, atau mengubah ISMS?",
+      "desc_en": "Obtain management authorization to implement and operate or change the ISMS. 5"
+    },
+    {
+      "num": 5,
+      "practice": "APO13",
+      "question": "Apakah sudah ada dokumen yang menjelaskan cakupan dan batasan penerapan Sistem Manajemen Keamanan Informasi (ISMS) dan sudah dijaga keterkiniannya?",
+      "desc_en": "Prepare and maintain a statement of applicability that describes the scope of the ISMS. 6"
+    },
+    {
+      "num": 6,
+      "practice": "APO13",
+      "question": "Apakah peran dan tanggung jawab setiap pihak dalam pengelolaan keamanan informasi sudah ditetapkan dan dikomunikasikan kepada seluruh pihak terkait?",
+      "desc_en": "Define and communicate information security management roles and responsibilities. 7"
+    },
+    {
+      "num": 7,
+      "practice": "APO13",
+      "question": "Apakah pendekatan ISMS sudah dikomunikasikan Apakah peran dan tanggung jawab setiap pihak dalam pengelolaan keamanan informasi sudah ditetapkan dan dikomunikasikan kepada seluruh pihak terkait?",
+      "desc_en": "Communicate the ISMS approach. Capability Level 3 APO13.02 — Define and Manage an Information Security and Privacy Risk Treatment Plan (Rencana Penanganan Risiko Keamanan) 8"
+    },
+    {
+      "num": 8,
+      "practice": "APO13.02",
+      "question": "Apakah sudah ada rencana penanganan risiko keamanan informasi yang selaras dengan tujuan strategis organisasi, termasuk praktik pengelolaan dan solusi keamanan yang paling sesuai?",
+      "desc_en": "Formulate and maintain an information security risk treatment plan aligned with strategic objectives and the enterprise architecture. Ensure that the plan identifies the appropriat"
+    },
+    {
+      "num": 9,
+      "practice": "APO13",
+      "question": "Apakah daftar komponen dan solusi yang digunakan untuk mengelola risiko keamanan sudah dipelihara sebagai bagian dari kerangka teknologi organisasi?",
+      "desc_en": "Maintain as part of the enterprise architecture an inventory of solution components that are in place to manage security-related risk. 10"
+    },
+    {
+      "num": 10,
+      "practice": "APO13",
+      "question": "Apakah sudah ada usulan pelaksanaan rencana penanganan risiko keamanan yang disertai dengan justifikasi bisnis, termasuk rencana anggaran dan pembagian tanggung jawab?",
+      "desc_en": "Develop proposals to implement the information security risk treatment plan, supported by suitable business cases that include consideration of funding and allocation of roles and "
+    },
+    {
+      "num": 11,
+      "practice": "APO13",
+      "question": "Apakah masukan untuk perancangan dan pengembangan praktik pengelolaan serta solusi keamanan yang dipilih sudah diberikan kepada pihak yang bertanggung jawab?",
+      "desc_en": "Provide input to the design and development of management practices and solutions selected from the information security risk treatment plan. 12"
+    },
+    {
+      "num": 12,
+      "practice": "APO13",
+      "question": "Apakah program pelatihan dan peningkatan kesadaran tentang keamanan informasi dan privasi data sudah dilaksanakan?",
+      "desc_en": "Implement information security and privacy training and awareness programs. 13"
+    },
+    {
+      "num": 13,
+      "practice": "APO13",
+      "question": "Apakah perencanaan, perancangan, penerapan, dan pemantauan prosedur keamanan informasi sudah diintegrasikan agar insiden keamanan dapat dicegah, dideteksi, dan ditangani secara cepat?",
+      "desc_en": "Integrate the planning, design, implementation and monitoring of information security and privacy procedures and other controls capable of enabling prompt prevention, detection of "
+    },
+    {
+      "num": 14,
+      "practice": "APO13.02",
+      "question": "Apakah sudah ada cara yang ditetapkan untuk mengukur seberapa efektif praktik pengelolaan keamanan yang dipilih, sehingga hasilnya dapat dibandingkan dan diulang secara konsisten?",
+      "desc_en": "Define how to measure the effectiveness of the selected management practices. Specify how these measurements are to be used to assess effectiveness to produce comparable and reprod"
+    },
+    {
+      "num": 15,
+      "practice": "APO13.03",
+      "question": "Apakah efektivitas Sistem Manajemen Keamanan Informasi (ISMS) dievaluasi secara berkala, termasuk kesesuaiannya dengan kebijakan, tujuan, serta praktik keamanan dan privasi yang berlaku?",
+      "desc_en": "Undertake regular reviews of the effectiveness of the ISMS. Include meeting ISMS policy and objectives and reviewing security and privacy practices. 16"
+    },
+    {
+      "num": 16,
+      "practice": "APO13",
+      "question": "Apakah audit ISMS dilaksanakan pada interval yang telah direncanakan?",
+      "desc_en": "Conduct ISMS audits at planned intervals. 17"
+    },
+    {
+      "num": 17,
+      "practice": "APO13",
+      "question": "Apakah pimpinan melakukan tinjauan berkala terhadap Sistem Manajemen Keamanan Informasi (ISMS) untuk memastikan cakupannya masih memadai dan peluang perbaikannya diidentifikasi?",
+      "desc_en": "Undertake a management review of the ISMS on a regular basis to ensure that the scope remains adequate and improvements in the ISMS process are identified. 18"
+    },
+    {
+      "num": 18,
+      "practice": "APO13",
+      "question": "Apakah tindakan dan kejadian yang berpotensi mempengaruhi kinerja Sistem Manajemen Keamanan Informasi (ISMS) dicatat dan ditindaklanjuti?",
+      "desc_en": "Record actions and events that could have an impact on the effectiveness or performance of the ISMS. Capability Level 5 APO13.03 — Monitor and Review the ISMS (lanjutan Level 5) 19"
+    },
+    {
+      "num": 19,
+      "practice": "APO13.03",
+      "question": "Apakah masukan untuk pembaruan rencana keamanan sudah diberikan berdasarkan temuan dari kegiatan pemantauan dan evaluasi yang dilakukan?",
+      "desc_en": "Provide input to the maintenance of the security plans to take into account the findings of monitoring and reviewing activities."
+    }
+  ],
+  "DSS05": [
+    {
+      "num": 1,
+      "practice": "DSS05.01",
+      "question": "Apakah perangkat lunak perlindungan dari malware (virus, ransomware, dll.) sudah dipasang dan diaktifkan di semua perangkat pemrosesan, dengan file definisi yang diperbarui secara otomatis atau semi-otomatis?",
+      "desc_en": "Install and activate malicious software protection tools on all processing facilities, with malicious software definition files that are updated as required (automatically or semi-"
+    },
+    {
+      "num": 2,
+      "practice": "DSS05",
+      "question": "Apakah lalu lintas masuk seperti email dan unduhan sudah difilter untuk melindungi dari informasi yang tidak diminta seperti spyware dan email phishing?",
+      "desc_en": "Filter incoming traffic, such as email and downloads, to protect against unsolicited information (e.g., spyware, phishing emails). DSS05.02 — Manage Network and Connectivity Securi"
+    },
+    {
+      "num": 3,
+      "practice": "DSS05.02",
+      "question": "Apakah hanya perangkat yang sudah mendapat izin resmi yang dapat mengakses jaringan dan informasi organisasi, dengan kewajiban memasukkan kata sandi?",
+      "desc_en": "Allow only authorized devices to have access to corporate information and the enterprise network. Configure these devices to force password entry. 4"
+    },
+    {
+      "num": 4,
+      "practice": "DSS05",
+      "question": "Apakah mekanisme filtering jaringan seperti firewall dan perangkat lunak deteksi intrusi sudah diimplementasikan dengan kebijakan yang mengatur lalu lintas masuk dan keluar?",
+      "desc_en": "Implement network filtering mechanisms, such as firewalls and intrusion detection software. Enforce appropriate policies to control inbound and outbound traffic. 5"
+    },
+    {
+      "num": 5,
+      "practice": "DSS05",
+      "question": "Apakah protokol keamanan yang disetujui sudah diterapkan untuk konektivitas jaringan?",
+      "desc_en": "Apply approved security protocols to network connectivity. === PAGE 7 === No Aktivitas (Bahasa Indonesia) Activity (English — COBIT 2019) Ya Tidak 6"
+    },
+    {
+      "num": 6,
+      "practice": "DSS05",
+      "question": "Apakah perangkat jaringan sudah dikonfigurasi dengan cara yang aman?",
+      "desc_en": "Configure network equipment in a secure manner. DSS05.03 — Manage Endpoint Security (Keamanan Perangkat Pengguna) 7"
+    },
+    {
+      "num": 7,
+      "practice": "DSS05.03",
+      "question": "Apakah sistem operasi pada setiap perangkat pengguna (komputer, laptop, dll.) sudah dikonfigurasi sesuai standar keamanan?",
+      "desc_en": "Configure operating systems in a secure manner. 8"
+    },
+    {
+      "num": 8,
+      "practice": "DSS05",
+      "question": "Apakah mekanisme penguncian perangkat (device lockdown) sudah diimplementasikan?",
+      "desc_en": "Implement device lockdown mechanisms. 9"
+    },
+    {
+      "num": 9,
+      "practice": "DSS05",
+      "question": "Apakah akses dari jarak jauh dan penggunaan perangkat mobile serta kerja dari luar kantor sudah dikelola dengan baik?",
+      "desc_en": "Manage remote access and control (e.g., mobile devices, teleworking). 10"
+    },
+    {
+      "num": 10,
+      "practice": "DSS05",
+      "question": "Apakah pengaturan jaringan pada setiap perangkat pengguna dikelola sesuai standar keamanan?",
+      "desc_en": "Manage network configuration in a secure manner. 11"
+    },
+    {
+      "num": 11,
+      "practice": "DSS05",
+      "question": "Apakah penyaringan lalu lintas jaringan pada setiap perangkat pengguna sudah diterapkan?",
+      "desc_en": "Implement network traffic filtering on endpoint devices. 12"
+    },
+    {
+      "num": 12,
+      "practice": "DSS05",
+      "question": "Apakah keutuhan dan keamanan setiap perangkat pengguna dijaga secara terus-menerus?",
+      "desc_en": "Protect system integrity. 13"
+    },
+    {
+      "num": 13,
+      "practice": "DSS05",
+      "question": "Apakah perlindungan secara fisik terhadap perangkat pengguna sudah disediakan?",
+      "desc_en": "Provide physical protection of endpoint devices. 14"
+    },
+    {
+      "num": 14,
+      "practice": "DSS05",
+      "question": "Apakah perangkat pengguna yang sudah tidak dipakai dimusnahkan atau dinonaktifkan dengan cara yang aman agar data tidak bocor?",
+      "desc_en": "Dispose of endpoint devices securely. 15"
+    },
+    {
+      "num": 15,
+      "practice": "DSS05",
+      "question": "Apakah akses berbahaya melalui email dan browser web sudah dikelola misalnya dengan memblokir situs web tertentu dan menonaktifkan click-through pada tautan?",
+      "desc_en": "Manage malicious access through email and web browsers. For example, block certain websites and deactivate click-through on links for smartphones. DSS05.04 — Manage User Identity a"
+    },
+    {
+      "num": 16,
+      "practice": "DSS05.04",
+      "question": "Apakah hak akses pengguna dijaga sesuai dengan peran dan kebutuhan kerjanya, dengan menerapkan prinsip bahwa setiap pengguna hanya mendapat akses sesuai yang benar-benar dibutuhkan?",
+      "desc_en": "Maintain user access rights in accordance with business function, process requirements and security policies. Align the management of identities and access rights to the defined ro"
+    },
+    {
+      "num": 17,
+      "practice": "DSS05.05",
+      "question": "Apakah semua titik masuk ke fasilitas TI sudah dicatat dan dipantau termasuk registrasi semua pengunjung, kontraktor, dan vendor?",
+      "desc_en": "Log and monitor all entry points to IT sites. Register all visitors, including contractors and vendors, to the site. 18"
+    },
+    {
+      "num": 18,
+      "practice": "DSS05",
+      "question": "Apakah semua staf selalu mengenakan atau menampilkan tanda pengenal resmi yang sudah disetujui?",
+      "desc_en": "Ensure all personnel display properly approved identification at all times. 19"
+    },
+    {
+      "num": 19,
+      "practice": "DSS05",
+      "question": "Apakah pengunjung selalu didampingi selama berada di lokasi fasilitas TI?",
+      "desc_en": "Require visitors to be escorted at all times while on-site. 20"
+    },
+    {
+      "num": 20,
+      "practice": "DSS05",
+      "question": "Apakah akses ke lokasi TI yang sensitif dibatasi dan dipantau menggunakan pembatas perimeter seperti pagar, dinding, dan perangkat keamanan pada pintu?",
+      "desc_en": "Restrict and monitor access to sensitive IT sites by establishing perimeter restrictions, such as fences, walls and security devices on interior and exterior doors. DSS05.06 — Mana"
+    },
+    {
+      "num": 21,
+      "practice": "DSS05.06",
+      "question": "Apakah prosedur untuk mengatur penerimaan, penggunaan, penghapusan, dan pembuangan dokumen sensitif dan perangkat output sudah ditetapkan?",
+      "desc_en": "Establish procedures to govern the receipt, use, removal and disposal of sensitive documents and output devices into, within, and outside of the enterprise. 22"
+    },
+    {
+      "num": 22,
+      "practice": "DSS05",
+      "question": "Apakah enkripsi atau perlindungan data sudah diterapkan untuk melindungi informasi sensitif yang tersimpan secara digital?",
+      "desc_en": "Ensure cryptographic controls are in place to protect sensitive electronically stored information. === PAGE 8 === No Aktivitas (Bahasa Indonesia) Activity (English — COBIT 2019) Ya"
+    },
+    {
+      "num": 23,
+      "practice": "DSS05.07",
+      "question": "Apakah portofolio teknologi, layanan, dan aset yang didukung digunakan secara berkelanjutan untuk mengidentifikasi kerentanan keamanan informasi?",
+      "desc_en": "Continually use a portfolio of supported technologies, services and assets (e.g., vulnerability scanners, fuzzers and sniffers, protocol analyzers) to identify information security"
+    },
+    {
+      "num": 24,
+      "practice": "DSS05",
+      "question": "Apakah kemungkinan-kemungkinan risiko keamanan sudah ditetapkan dan dikomunikasikan agar mudah dikenali beserta kemungkinan terjadi dan dampaknya?",
+      "desc_en": "Define and communicate risk scenarios, so they can be easily recognized, and the likelihood and impact understood. 25"
+    },
+    {
+      "num": 25,
+      "practice": "DSS05",
+      "question": "Apakah log kejadian ditinjau secara berkala untuk mendeteksi potensi insiden?",
+      "desc_en": "Regularly review the event logs for potential incidents. 26"
+    },
+    {
+      "num": 26,
+      "practice": "DSS05",
+      "question": "Apakah laporan insiden keamanan dibuat segera setelah pemantauan mendeteksi adanya potensi insiden?",
+      "desc_en": "Ensure that security-related incident tickets are created in a timely manner when monitoring identifies potential incidents. Capability Level 3 DSS05.01 — Protect Against Malicious"
+    },
+    {
+      "num": 27,
+      "practice": "DSS05.01",
+      "question": "Apakah kesadaran tentang malware sudah dikomunikasikan dan prosedur pencegahan ditegakkan termasuk pelatihan berkala penggunaan email dan internet serta cara melaporkan email mencurigakan?",
+      "desc_en": "Communicate malicious software awareness and enforce prevention procedures and responsibilities. Conduct periodic training about malware in email and Internet usage. Train users to"
+    },
+    {
+      "num": 28,
+      "practice": "DSS05",
+      "question": "Apakah semua perangkat lunak perlindungan didistribusikan secara terpusat menggunakan manajemen konfigurasi dan perubahan TI terpusat?",
+      "desc_en": "Distribute all protection software centrally (version and patch-level) using centralized configuration and IT change management. DSS05.02 — Manage Network Security (lanjutan Level "
+    },
+    {
+      "num": 29,
+      "practice": "DSS05.02",
+      "question": "Apakah informasi dalam transit sudah dienkripsi sesuai dengan klasifikasinya?",
+      "desc_en": "Encrypt information in transit according to its classification. 30"
+    },
+    {
+      "num": 30,
+      "practice": "DSS05",
+      "question": "Apakah kebijakan untuk keamanan konektivitas sudah ditetapkan dan dipelihara berdasarkan penilaian risiko dan persyaratan bisnis?",
+      "desc_en": "Based on risk assessments and business requirements, establish and maintain a policy for security of connectivity. 31"
+    },
+    {
+      "num": 31,
+      "practice": "DSS05",
+      "question": "Apakah mekanisme yang tepercaya untuk mendukung transmisi dan penerimaan informasi yang aman sudah ditetapkan?",
+      "desc_en": "Establish trusted mechanisms to support the secure transmission and receipt of information. DSS05.03 — Manage Endpoint Security (lanjutan Level 3) 32"
+    },
+    {
+      "num": 32,
+      "practice": "DSS05.03",
+      "question": "Apakah informasi yang tersimpan di perangkat endpoint sudah dienkripsi sesuai dengan klasifikasinya?",
+      "desc_en": "Encrypt information in storage according to its classification. DSS05.04 — Manage User Identity (lanjutan Level 3) 33"
+    },
+    {
+      "num": 33,
+      "practice": "DSS05.04",
+      "question": "Apakah semua perubahan hak akses (pembuatan, modifikasi, dan penghapusan) dilakukan secara tepat waktu berdasarkan transaksi yang disetujui dan terdokumentasi?",
+      "desc_en": "Administer all changes to access rights (creation, modifications and deletions) in a timely manner based only on approved and documented transactions authorized by designated manag"
+    },
+    {
+      "num": 34,
+      "practice": "DSS05",
+      "question": "Apakah akun pengguna privileged dikelola dengan jumlah minimal yang diperlukan dan aktivitasnya dipantau secara aktif di semua akun tersebut?",
+      "desc_en": "Segregate, reduce to the minimum number necessary and actively manage privileged user accounts. Ensure monitoring on all activity on these accounts. 35"
+    },
+    {
+      "num": 35,
+      "practice": "DSS05",
+      "question": "Apakah semua aktivitas pemrosesan informasi sudah diidentifikasi secara unik berdasarkan peran fungsional dan diselaraskan dengan unit bisnis termasuk peran yang didefinisikan oleh bisnis itu sendiri?",
+      "desc_en": "Uniquely identify all information processing activities by functional roles. Coordinate with business units to ensure that all roles are consistently defined, including roles that "
+    },
+    {
+      "num": 36,
+      "practice": "DSS05",
+      "question": "Apakah semua akses ke aset informasi sudah diautentikasi berdasarkan peran individu atau aturan bisnis yang terkoordinasi dengan unit bisnis untuk memastikan kontrol autentikasi sudah dikelola dengan benar?",
+      "desc_en": "Authenticate all access to information assets based on the individual's role or business rules. Coordinate with business units that manage authentication within applications used i"
+    },
+    {
+      "num": 37,
+      "practice": "DSS05",
+      "question": "Apakah semua pengguna (internal, eksternal, dan sementara) beserta aktivitasnya pada sistem TI dapat diidentifikasi secara unik?",
+      "desc_en": "Ensure that all users (internal, external and temporary) and their activity on IT systems (business application, IT infrastructure, system operations, development and maintenance) "
+    },
+    {
+      "num": 38,
+      "practice": "DSS05.05",
+      "question": "Apakah permintaan akses ke fasilitas komputasi sudah dikelola dan mendapat persetujuan dari pihak yang berwenang?",
+      "desc_en": "Manage requests to allow appropriately authorized access to the computing facilities. 39"
+    },
+    {
+      "num": 39,
+      "practice": "DSS05",
+      "question": "Apakah hak akses ke area TI — termasuk ruang server dan gedung — selalu diperbarui sesuai dengan fungsi dan tanggung jawab jabatan masing-masing pengguna?",
+      "desc_en": "Ensure that access profiles remain current. Base access to IT sites (server rooms, buildings, areas or zones) on job function and responsibilities. 40"
+    },
+    {
+      "num": 40,
+      "practice": "DSS05",
+      "question": "Apakah pelatihan kesadaran keamanan fisik (seperti menjaga area server, tidak meninggalkan perangkat tanpa pengawasan) dilakukan secara berkala?",
+      "desc_en": "Conduct regular physical information security awareness training. DSS05.06 — Manage Sensitive Documents (lanjutan Level 3) 41"
+    },
+    {
+      "num": 41,
+      "practice": "DSS05.06",
+      "question": "Apakah hak akses ke dokumen sensitif dan perangkat keluaran ditetapkan berdasarkan prinsip hak akses minimal yang diperlukan, dengan mempertimbangkan risiko dan kebutuhan bisnis?",
+      "desc_en": "Assign access privileges to sensitive documents and output devices based on the least-privilege principle, balancing risk and business requirements. 42"
+    },
+    {
+      "num": 42,
+      "practice": "DSS05",
+      "question": "Apakah sudah ada daftar dokumen sensitif dan perangkat keluaran, serta pengecekan rutin untuk memastikan kesesuaian antara daftar dan kondisi aktual?",
+      "desc_en": "Establish an inventory of sensitive documents and output devices, and conduct regular reconciliations. 43"
+    },
+    {
+      "num": 43,
+      "practice": "DSS05",
+      "question": "Apakah sudah ada perlindungan fisik yang memadai untuk menjaga keamanan dokumen sensitif?",
+      "desc_en": "Establish appropriate physical safeguards over sensitive documents. DSS05.07 — Manage Vulnerabilities (lanjutan Level 3) 44"
+    },
+    {
+      "num": 44,
+      "practice": "DSS05.07",
+      "question": "Apakah catatan kejadian keamanan disimpan selama jangka waktu yang sesuai dengan ketentuan yang berlaku?",
+      "desc_en": "Log security-related events and retain records for appropriate period. Capability Level 4 DSS05.01 — Protect Against Malicious Software (lanjutan Level 4) 45"
+    },
+    {
+      "num": 45,
+      "practice": "DSS05.01",
+      "question": "Apakah informasi tentang ancaman keamanan baru secara berkala ditinjau dari pemberitahuan keamanan yang diterbitkan oleh vendor produk dan layanan yang digunakan?",
+      "desc_en": "Regularly review and evaluate information on new potential threats (e.g., reviewing vendors' products and services security advisories). DSS05.02 — Manage Network Security (lanjuta"
+    },
+    {
+      "num": 46,
+      "practice": "DSS05.02",
+      "question": "Apakah uji coba penyusupan (penetration testing) dilakukan secara berkala untuk mengetahui apakah perlindungan jaringan sudah memadai?",
+      "desc_en": "Carry out periodic penetration testing to determine adequacy of network protection. 47"
+    },
+    {
+      "num": 47,
+      "practice": "DSS05",
+      "question": "Apakah pengujian berkala terhadap keamanan sistem juga dilakukan untuk menentukan kecukupan perlindungan sistem?",
+      "desc_en": "Carry out periodic testing of system security to determine adequacy of system protection. DSS05.04 — Manage User Identity (lanjutan Level 4) 48"
+    },
+    {
+      "num": 48,
+      "practice": "DSS05.04",
+      "question": "Apakah jejak audit akses ke informasi dipelihara berdasarkan sensitivitas dan persyaratan regulasinya?",
+      "desc_en": "Maintain an audit trail of access to information depending upon its sensitivity and regulatory requirements. === PAGE 10 === No Aktivitas (Bahasa Indonesia) Activity (English — COB"
+    },
+    {
+      "num": 49,
+      "practice": "DSS05",
+      "question": "Apakah pimpinan secara berkala meninjau semua akun pengguna beserta hak aksesnya?",
+      "desc_en": "Perform regular management review of all accounts and related privileges."
+    }
+  ],
+  "MEA03": [
+    {
+      "num": 1,
+      "practice": "MEA03.01",
+      "question": "Apakah sudah ada pihak yang ditugaskan untuk mengidentifikasi dan memantau perubahan peraturan hukum, regulasi, dan persyaratan kontrak yang berkaitan dengan penggunaan TI?",
+      "desc_en": "Assign responsibility for identifying and monitoring any changes of legal, regulatory and other external contractual requirements relevant to the use of IT resources and the proces"
+    },
+    {
+      "num": 2,
+      "practice": "MEA03",
+      "question": "Apakah semua persyaratan kepatuhan potensial dan dampaknya terhadap aktivitas TI sudah diidentifikasi dan dinilai termasuk area aliran data, privasi, kontrol internal, pelaporan keuangan, dan regulasi industri?",
+      "desc_en": "Identify and assess all potential compliance requirements and the impact on I&T activities in areas such as data flow, privacy, internal controls, financial reporting, industry-spe"
+    },
+    {
+      "num": 3,
+      "practice": "MEA03",
+      "question": "Apakah dampak persyaratan hukum dan regulasi TI terhadap kontrak pihak ketiga terkait operasional TI, penyedia layanan, dan mitra bisnis sudah dinilai?",
+      "desc_en": "Assess the impact of I&T-related legal and regulatory requirements on third-party contracts related to IT operations, service providers and business trading partners. 4"
+    },
+    {
+      "num": 4,
+      "practice": "MEA03",
+      "question": "Apakah akibat atau sanksi dari ketidakpatuhan terhadap aturan yang berlaku sudah ditetapkan dan didokumentasikan?",
+      "desc_en": "Define the consequences of noncompliance. MEA03.04 — Obtain Assurance of External Compliance (Memperoleh Jaminan Kepatuhan Eksternal) 5"
+    },
+    {
+      "num": 5,
+      "practice": "MEA03.04",
+      "question": "Apakah konfirmasi kepatuhan terhadap kebijakan internal dari pemilik proses bisnis dan TI serta kepala unit diperoleh secara berkala?",
+      "desc_en": "Obtain regular confirmation of compliance with internal policies from business and IT process owners and unit heads. 6"
+    },
+    {
+      "num": 6,
+      "practice": "MEA03",
+      "question": "Apakah tinjauan internal dan eksternal yang berkala dan bila perlu independen dilakukan untuk menilai tingkat kepatuhan?",
+      "desc_en": "Perform regular (and, where appropriate, independent) internal and external reviews to assess levels of compliance. 7"
+    },
+    {
+      "num": 7,
+      "practice": "MEA03",
+      "question": "Apakah pernyataan dari penyedia layanan TI pihak ketiga mengenai tingkat kepatuhan mereka terhadap hukum dan regulasi yang berlaku diperoleh jika diperlukan?",
+      "desc_en": "If required, obtain assertions from third-party I&T service providers on levels of their compliance with applicable laws and regulations. 8"
+    },
+    {
+      "num": 8,
+      "practice": "MEA03",
+      "question": "Apakah pernyataan dari mitra bisnis mengenai tingkat kepatuhan mereka terhadap hukum dan regulasi terkait transaksi elektronik antara perusahaan diperoleh jika diperlukan?",
+      "desc_en": "If required, obtain assertions from business partners on levels of their compliance with applicable laws and regulations as they relate to intercompany electronic transactions. Cap"
+    },
+    {
+      "num": 9,
+      "practice": "MEA03.01",
+      "question": "Apakah konsultasi hukum independen diperoleh bila diperlukan untuk perubahan hukum, regulasi, dan standar yang berlaku?",
+      "desc_en": "Obtain independent counsel, where appropriate, on changes to applicable laws, regulations and standards. 10"
+    },
+    {
+      "num": 10,
+      "practice": "MEA03",
+      "question": "Apakah log semua persyaratan hukum, regulasi, dan kontraktual yang relevan beserta dampak dan tindakan yang diperlukan dipelihara secara terkini?",
+      "desc_en": "Maintain an up-to-date log of all relevant legal, regulatory and contractual requirements; their impact and required actions. === PAGE 11 === No Aktivitas (Bahasa Indonesia) Activi"
+    },
+    {
+      "num": 11,
+      "practice": "MEA03",
+      "question": "Apakah sudah ada daftar terpadu dan terkoordinasi yang merangkum semua kewajiban kepatuhan eksternal untuk seluruh organisasi?",
+      "desc_en": "Maintain a harmonized and integrated overall register of external compliance requirements for the enterprise. MEA03.02 — Optimize Response to External Requirements (Mengoptimalkan "
+    },
+    {
+      "num": 12,
+      "practice": "MEA03.02",
+      "question": "Apakah kebijakan, prinsip, standar, prosedur, dan metodologi secara berkala ditinjau dan disesuaikan untuk memastikan efektivitasnya dalam memenuhi kepatuhan dan mengatasi risiko enterprise, menggunakan pakar internal dan eksternal bila diperlukan?",
+      "desc_en": "Regularly review and adjust policies, principles, standards, procedures and methodologies for their effectiveness in ensuring necessary compliance and addressing enterprise risk. U"
+    },
+    {
+      "num": 13,
+      "practice": "MEA03",
+      "question": "Apakah persyaratan baru dan yang berubah dikomunikasikan kepada semua personel yang relevan?",
+      "desc_en": "Communicate new and changed requirements to all relevant personnel. MEA03.03 — Confirm External Compliance (Mengonfirmasi Kepatuhan Eksternal) 14"
+    },
+    {
+      "num": 14,
+      "practice": "MEA03.03",
+      "question": "Apakah kebijakan, standar, prosedur, dan metode kerja organisasi secara berkala dievaluasi di seluruh fungsi organisasi untuk memastikan kesesuaiannya dengan hukum dan regulasi yang berlaku terkait pengelolaan informasi?",
+      "desc_en": "Regularly evaluate organizational policies, standards, procedures and methodologies in all functions of the enterprise to ensure compliance with relevant legal and regulatory requi"
+    },
+    {
+      "num": 15,
+      "practice": "MEA03",
+      "question": "Apakah kesenjangan kepatuhan pada kebijakan, standar, dan prosedur ditangani secara tepat waktu?",
+      "desc_en": "Address compliance gaps in policies, standards and procedures on a timely basis. 16"
+    },
+    {
+      "num": 16,
+      "practice": "MEA03",
+      "question": "Apakah proses dan aktivitas bisnis serta TI secara berkala dievaluasi untuk memastikan kepatuhan terhadap persyaratan hukum, regulasi, dan kontraktual yang berlaku?",
+      "desc_en": "Periodically evaluate business and IT processes and activities to ensure adherence to applicable legal, regulatory and contractual requirements. MEA03.04 — Obtain Assurance (lanjut"
+    },
+    {
+      "num": 17,
+      "practice": "MEA03.04",
+      "question": "Apakah pelaporan terkait pemenuhan ketentuan hukum, regulasi, dan kontrak sudah diintegrasikan di tingkat organisasi secara menyeluruh dengan melibatkan semua unit bisnis?",
+      "desc_en": "Integrate reporting on legal, regulatory and contractual requirements at an enterprisewide level, involving all business units. Capability Level 4 MEA03.03 — Confirm External Compl"
+    },
+    {
+      "num": 18,
+      "practice": "MEA03.03",
+      "question": "Apakah pola kegagalan kepatuhan yang terjadi berulang kali secara berkala ditinjau dan pelajaran yang dapat diambil dari kegagalan tersebut sudah dievaluasi?",
+      "desc_en": "Regularly review for recurring patterns of compliance failures and assess lessons learned. MEA03.04 — Obtain Assurance (lanjutan Level 4) 19"
+    },
+    {
+      "num": 19,
+      "practice": "MEA03.04",
+      "question": "Apakah permasalahan ketidakpatuhan dipantau dan dilaporkan, serta bila diperlukan, penyebab utamanya diselidiki lebih lanjut?",
+      "desc_en": "Monitor and report on noncompliance issues and, where necessary, investigate the root cause. Capability Level 5 MEA03.03 — Confirm External Compliance (lanjutan Level 5) 20"
+    },
+    {
+      "num": 20,
+      "practice": "MEA03.03",
+      "question": "Apakah kebijakan, standar, prosedur, metode kerja, serta proses terkait diperbaiki berdasarkan hasil tinjauan dan pelajaran yang dipetik dari pengalaman sebelumnya?",
+      "desc_en": "Based on review and lessons learned, improve policies, standards, procedures, methodologies, and associated processes and activities."
+    }
+  ]
+}

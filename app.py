@@ -12,7 +12,10 @@ from engine import (
     calc_fuzzy_5, calc_fuzzy_3, calc_percentage_avg, calc_risk_profile,
     save_individual_answers, get_user_submission_status, get_user_saved_answers,
     get_all_submitted_respondents, aggregate_two_respondents,
-    get_rating_level_cobit, generate_pdf_report, DB_FILE
+    get_rating_level_cobit, generate_pdf_report, DB_FILE,
+    load_checklist_questions, save_individual_checklist, get_user_checklist_answers,
+    get_user_checklist_status, get_all_checklist_submitted_respondents,
+    calculate_domain_checklist_score, get_preset_skripsi_capability
 )
 
 # Inisialisasi Database
@@ -579,7 +582,7 @@ st.sidebar.markdown(f"""
 
 if is_admin:
     menu = st.sidebar.radio(
-        "NAVIGASI MODUL UTAMA",
+        "NAVIGASI MODUL AUDITOR (ADMIN)",
         [
             "📝  1. Pengolahan & Penggabungan Responden (DF1–DF10)", 
             "📊  2. Rekapitulasi & Visualisasi DF", 
@@ -589,22 +592,38 @@ if is_admin:
     )
 else:
     menu = st.sidebar.radio(
-        "NAVIGASI MODUL UTAMA",
+        "NAVIGASI AUDITOR RESPONDEN",
         [
-            "📝  Formulir Kuesioner (DF1–DF10)"
+            "📝  1. Wawancara 1: Kuesioner DF1–DF10",
+            "📋  2. Wawancara 2: Checklist Capability Level"
         ]
     )
     is_sub_status, sub_time = get_user_submission_status(user_p['id'])
+    is_chk_status, chk_count, chk_time = get_user_checklist_status(user_p['id'])
+    
     if is_sub_status:
         st.sidebar.markdown(f"""
-        <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:10px 12px; margin-top:8px; font-size:0.75rem; color:#15803D;">
-            <b>✓ Status Kuesioner:</b><br>Sudah Diserahkan ({sub_time[:16]})
+        <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:9px 12px; margin-top:8px; font-size:0.75rem; color:#15803D;">
+            <b>✓ Wawancara 1 (DF1–DF10):</b><br>Sudah Diserahkan ({sub_time[:16] if sub_time else ''})
         </div>
         """, unsafe_allow_html=True)
     else:
         st.sidebar.markdown("""
-        <div style="background:#FEF3C7; border:1px solid #FDE68A; border-radius:10px; padding:10px 12px; margin-top:8px; font-size:0.75rem; color:#92400E;">
-            <b>⏳ Status Kuesioner:</b><br>Belum Selesai Diisi
+        <div style="background:#FEF3C7; border:1px solid #FDE68A; border-radius:10px; padding:9px 12px; margin-top:8px; font-size:0.75rem; color:#92400E;">
+            <b>⏳ Wawancara 1 (DF1–DF10):</b><br>Belum Selesai Diisi
+        </div>
+        """, unsafe_allow_html=True)
+
+    if is_chk_status:
+        st.sidebar.markdown(f"""
+        <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:9px 12px; margin-top:6px; font-size:0.75rem; color:#15803D;">
+            <b>✓ Wawancara 2 (Checklist):</b><br>Lengkap (124/124 Butir) ({chk_time[:16] if chk_time else ''})
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.sidebar.markdown(f"""
+        <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:9px 12px; margin-top:6px; font-size:0.75rem; color:#1E40AF;">
+            <b>📋 Wawancara 2 (Checklist):</b><br>Terisi {chk_count}/124 Butir
         </div>
         """, unsafe_allow_html=True)
 
@@ -648,23 +667,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------
-# MODUL 1: INPUT / PENGOLAHAN KUESIONER (DF1 - DF10)
+# MODUL 1 & WAWANCARA: INPUT / PENGOLAHAN (DF1 - DF10 & CHECKLIST)
 # ----------------------------------------------------
-if (not is_admin) or ("1. Pengolahan" in menu) or ("Formulir Kuesioner" in menu):
-    if not is_admin:
+if not is_admin:
+    if ("Wawancara 1" in menu) or ("Formulir Kuesioner" in menu):
         # ========================================================
-        # VIEW KHUSUS RESPONDEN (PENGISIAN MANDIRI DF1-DF10)
+        # VIEW KHUSUS RESPONDEN (WAWANCARA 1: PENGISIAN MANDIRI DF1-DF10)
         # ========================================================
         st.markdown(f"""
         <div style="margin-bottom:14px;">
-            <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">📝 Formulir Kuesioner Audit COBIT 2019 (DF1 - DF10)</h2>
-            <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Pengisian mandiri kuesioner evaluasi tata kelola teknologi informasi oleh auditor responden</p>
+            <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">📝 Wawancara Tahap I: Kuesioner DF1 - DF10</h2>
+            <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Pengisian kuesioner evaluasi 10 Design Factors tata kelola TI oleh auditor responden institusi</p>
         </div>
         """, unsafe_allow_html=True)
         
         is_sub_status, sub_time = get_user_submission_status(user_p['id'])
         if is_sub_status:
-            st.success(f"✅ **Kuesioner Terkirim:** Jawaban kuesioner Anda telah berhasil disimpan dan diserahkan ke Tim Administrator pada **{sub_time[:16] if sub_time else ''}**. Anda dapat meninjau atau memperbarui jawaban Anda di bawah ini jika diperlukan.")
+            st.success(f"✅ **Kuesioner Terkirim:** Jawaban Wawancara 1 Anda telah berhasil disimpan dan diserahkan ke Tim Administrator pada **{sub_time[:16] if sub_time else ''}**.")
             st.info("🔒 **Hak Akses Terbatas:** Seluruh hasil pengolahan agregat Fuzzy TFN, pemetaan Design Factor Map (Canvas), dan laporan Capability Level diproses secara terpusat dan hanya dapat dilihat serta diolah oleh Administrator.")
         else:
             st.info(f"Halo, **{user_p['fullname']}** ({user_p['position']})! Silakan isi seluruh indikator pada tab **DF1 sampai DF10** berikut sesuai observasi dan kondisi riil di unit kerja Anda. Setelah selesai, klik tombol **'Kirim Jawaban Kuesioner ke Administrator'**.")
@@ -795,300 +814,417 @@ if (not is_admin) or ("1. Pengolahan" in menu) or ("Formulir Kuesioner" in menu)
         with col_sub_info:
             st.info("💡 **Hak Akses:** Data jawaban Anda tercatat secara aman dan hanya dapat diolah serta dianalisis oleh Administrator.")
 
-    else:
+        if is_sub_status:
+            st.markdown("""
+            <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:12px 14px; margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="color:#1E40AF;">➡️ Lanjut ke Wawancara 2:</strong>
+                    <span style="font-size:0.83rem; color:#1E3A8A; margin-left:6px;">Silakan buka menu <b>📋 2. Wawancara 2: Checklist Capability Level</b> di sidebar untuk melengkapi validasi 4 domain prioritas institusi.</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    elif ("Wawancara 2" in menu) or ("Checklist" in menu):
         # ========================================================
-        # VIEW KHUSUS ADMINISTRATOR (PENGOLAHAN MULTI-RESPONDEN & MANUAL)
+        # VIEW KHUSUS RESPONDEN (WAWANCARA 2: CHECKLIST BINER YA/TIDAK)
         # ========================================================
-        st.markdown("""
+        st.markdown(f"""
         <div style="margin-bottom:14px;">
-            <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">⚙️ Pengolahan Data Kuesioner Multi-Responden (DF1–DF10)</h2>
-            <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Pilih dan gabungkan data kuesioner dari responden terdaftar menggunakan algoritma Triangular Fuzzy Numbers (TFN)</p>
+            <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">📋 Wawancara Tahap II: Checklist Capability Level</h2>
+            <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Checklist validasi implementasi tata kelola pada 4 Domain Prioritas UNKLAB (APO12, APO13, DSS05, MEA03) &bull; Metode Biner (Ya / Tidak)</p>
         </div>
         """, unsafe_allow_html=True)
         
-        tab_admin_multi, tab_admin_manual = st.tabs([
-            "👥 Pengolahan Multi-Responden (Data Database)", 
-            "✍️ Input / Simulasi Manual (2 Responden)"
-        ])
+        is_chk_status, chk_count, chk_time = get_user_checklist_status(user_p['id'])
+        if is_chk_status:
+            st.success(f"✅ **Checklist Wawancara 2 Lengkap:** Anda telah menjawab seluruh 124 butir pertanyaan checklist (Terakhir disimpan: **{chk_time[:16] if chk_time else ''}**). Anda dapat meninjau atau memperbarui jawaban di bawah ini.")
+            st.info("🔒 **Hak Akses Terbatas:** Data jawaban checklist Anda akan diolah secara terpusat oleh Administrator untuk menghitung persentase Capability Level institusi.")
+        else:
+            st.info(f"Halo, **{user_p['fullname']}** ({user_p['position']})! Wawancara Tahap II ini mengonfirmasi keterpenuhan praktik pada 4 Domain Prioritas. Silakan jawab setiap butir dengan pilihan **Ya** (sudah diterapkan) atau **Tidak** (belum diterapkan). Terisi saat ini: **{chk_count}/124 butir**.")
+
+        checklist_data = load_checklist_questions()
+        saved_chk_answers = get_user_checklist_answers(user_p['id'])
         
-        with tab_admin_multi:
-            submitted_list = get_all_submitted_respondents()
-            
-            # KPI Summary Responden
-            m_col1, m_col2, m_col3 = st.columns(3)
-            with m_col1:
+        dom_keys = ["APO12", "APO13", "DSS05", "MEA03"]
+        domain_tabs_labels = [
+            f"APO12 — Risk ({len(checklist_data.get('APO12', []))} Butir)",
+            f"APO13 — Security ({len(checklist_data.get('APO13', []))} Butir)",
+            f"DSS05 — Sec. Services ({len(checklist_data.get('DSS05', []))} Butir)",
+            f"MEA03 — Compliance ({len(checklist_data.get('MEA03', []))} Butir)"
+        ]
+        tabs_chk = st.tabs(domain_tabs_labels)
+        dom_titles = {
+            "APO12": ("APO12 — Managed Risk", "Manajemen Risiko TI Institusi (36 Butir Pertanyaan Validasi)"),
+            "APO13": ("APO13 — Managed Security", "Sistem Manajemen Keamanan Informasi (19 Butir Pertanyaan Validasi)"),
+            "DSS05": ("DSS05 — Managed Security Services", "Operasional Layanan Keamanan & Akses Data (49 Butir Pertanyaan Validasi)"),
+            "MEA03": ("MEA03 — Managed Compliance", "Kepatuhan terhadap Regulasi Eksternal & Internal (20 Butir Pertanyaan Validasi)")
+        }
+        
+        for idx, d_code in enumerate(dom_keys):
+            with tabs_chk[idx]:
+                d_title, d_desc = dom_titles.get(d_code, (d_code, ""))
+                q_list = checklist_data.get(d_code, [])
+                d_saved = saved_chk_answers.get(d_code, {})
+                ya_in_d = sum(1 for q in q_list if d_saved.get(q['num']) == 1)
+                
                 st.markdown(f"""
-                <div class="kpi-card kpi-card-cobit">
-                    <div class="kpi-title">Responden Mengisi Kuesioner</div>
-                    <div class="kpi-value">{len(submitted_list)}</div>
-                    <div class="kpi-desc">Tersimpan di Basis Data</div>
+                <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px 18px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div>
+                            <h3 style="margin:0; font-size:1.05rem; font-weight:700; color:#0F172A;">{d_title}</h3>
+                            <p style="margin:3px 0 0 0; color:#64748B; font-size:0.82rem;">{d_desc}</p>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <span style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600;">Metode: Biner Ya/Tidak</span>
+                            <span style="background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600;">Terisi 'Ya': {ya_in_d}/{len(q_list)}</span>
+                        </div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
-            with m_col2:
-                lengkap_count = sum(1 for r in submitted_list if r['df_count'] >= 10)
-                st.markdown(f"""
-                <div class="kpi-card kpi-card-teal">
-                    <div class="kpi-title">Kuesioner Lengkap 10 DF</div>
-                    <div class="kpi-value">{lengkap_count}</div>
-                    <div class="kpi-desc">Siap Diolah dengan TFN</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with m_col3:
-                st.markdown(f"""
-                <div class="kpi-card kpi-card-gold">
-                    <div class="kpi-title">Metode Defuzzifikasi</div>
-                    <div class="kpi-value" style="font-size:1.3rem;">TFN Centroid</div>
-                    <div class="kpi-desc">Standar ISACA COBIT 2019</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("<h3 style='font-size:1.05rem; font-weight:700; color:#0F172A;'>📋 Daftar Responden yang Telah Mengisi Kuesioner:</h3>", unsafe_allow_html=True)
-            
-            if submitted_list:
-                df_sub_show = pd.DataFrame([
-                    {
-                        "User ID": r["user_id"],
-                        "Username": r["username"],
-                        "Nama Responden": r["fullname"],
-                        "Jabatan / Unit": r["position"],
-                        "Cakupan DF": f"{r['df_count']} / 10 DF",
-                        "Waktu Pengisian": r["submitted_at"][:16] if r["submitted_at"] else "-"
-                    }
-                    for r in submitted_list
-                ])
-                st.dataframe(df_sub_show, use_container_width=True, hide_index=True)
-            else:
-                st.info("Belum ada responden yang mengisi kuesioner.")
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("""
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px 18px; margin-bottom:14px;">
-                <h3 style="margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0F172A;">⚡ Pasangkan & Olah Data Dua Responden (Fuzzy TFN)</h3>
-                <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Pilih Responden 1 (misal: Dept. SIU) dan Responden 2 (misal: Dept. IT) untuk diagregasikan secara matematis</p>
-            """, unsafe_allow_html=True)
-            
-            if len(submitted_list) >= 2:
-                resp_opts = {
-                    f"{r['fullname']} ({r['position']}) — @{r['username']}": r["user_id"]
-                    for r in submitted_list
-                }
-                opt_keys = list(resp_opts.keys())
                 
-                col_sel1, col_sel2 = st.columns(2)
-                with col_sel1:
-                    r1_sel = st.selectbox("Pilih Responden 1 (R1 - Dept. SIU / Accountable):", options=opt_keys, index=0)
-                with col_sel2:
-                    r2_sel = st.selectbox("Pilih Responden 2 (R2 - Dept. IT / Responsible):", options=opt_keys, index=1 if len(opt_keys) > 1 else 0)
-                
-                uid1 = resp_opts[r1_sel]
-                uid2 = resp_opts[r2_sel]
-                
-                st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-                if st.button("⚡ Gabungkan & Olah Data dengan Fuzzy TFN", type="primary", use_container_width=True):
-                    aggregated_results = aggregate_two_respondents(uid1, uid2, df_definitions)
-                    st.session_state.calculated_results = aggregated_results
-                    
-                    r1_name = r1_sel.split(" (")[0]
-                    r2_name = r2_sel.split(" (")[0]
-                    r_id = save_respondent_data(f"{r1_name} & {r2_name}", f"Agregat {r1_name} & {r2_name}", aggregated_results)
-                    st.success(f"✅ Data kuesioner berhasil digabungkan dan diolah dengan Fuzzy TFN (Terekam dengan Respondent ID #{r_id})! Silakan buka **Modul 2** untuk melihat hasil analisis.")
-                    st.balloons()
-            else:
-                st.warning("⚠️ Dibutuhkan minimal 2 responden yang telah mengisi kuesioner untuk melakukan penggabungan data secara otomatis. Silakan tunggu responden lain mengisi kuesioner, atau gunakan tab 'Input / Simulasi Manual'.")
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            if st.session_state.calculated_results:
-                st.markdown("<h4 style='font-size:0.95rem; font-weight:700; color:#0F172A; margin-top:10px;'>📊 Preview Hasil Agregasi Aktif:</h4>", unsafe_allow_html=True)
-                sample_df = list(st.session_state.calculated_results.keys())[0]
-                sample_rows = st.session_state.calculated_results[sample_df]
-                prev_table = pd.DataFrame([{
-                    "Indikator": r["indicator"],
-                    "Skor R1": r["r1"],
-                    "Skor R2": r["r2"],
-                    "Nilai Akhir Agregat": r["final_display"],
-                    "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
-                } for r in sample_rows[:5]])
-                st.dataframe(prev_table, use_container_width=True, hide_index=True)
-                st.caption("ℹ️ Menampilkan sampel hasil pengolahan data. Visualisasi lengkap dan Design Factor Map tersedia di Modul 2.")
-
-        with tab_admin_manual:
-            with st.expander(" Identitas Penilai & Metadata Audit", expanded=True):
-                col_resp_a, col_resp_b = st.columns(2)
-                resp_name = col_resp_a.text_input("Nama Penilai / Lead Auditor:", value="", placeholder="Ketik nama penilai...", key="m_resp_name")
-                resp_pos = col_resp_b.text_input("Jabatan / Unit Kerja Evaluasi:", value="", placeholder="Ketik jabatan penilai...", key="m_resp_pos")
-
-            tab_labels = [f"{code}" for code in df_definitions.keys()]
-            tabs = st.tabs(tab_labels)
-            temp_results = {}
-
-            for idx, (df_code, df_info) in enumerate(df_definitions.items()):
-                with tabs[idx]:
-                    is_fuzzy = (df_info["type"] == "fuzzy")
-                    is_risk  = (df_info["type"] == "risk_profile")
-                    method_badge = "Fuzzy TFN" if (is_fuzzy or is_risk) else " Direct Percentage"
-                    scale_badge  = f"Skala 1-{df_info['scale']}" if (is_fuzzy or is_risk) else "Skala 0-100%"
+                for q in q_list:
+                    q_num = q['num']
+                    saved_val = d_saved.get(q_num, 0)
                     
                     st.markdown(f"""
-                    <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px 18px; margin-bottom:16px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                            <div>
-                                <h3 style="margin:0; font-size:1.05rem; font-weight:700; color:#0F172A;">{df_info["title"]}</h3>
-                                <p style="margin:3px 0 0 0; color:#64748B; font-size:0.82rem;">{df_info["desc"]}</p>
-                            </div>
-                            <div style="display:flex; gap:6px;">
-                                <span style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600;">{method_badge}</span>
-                                <span style="background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600;">{scale_badge}</span>
-                            </div>
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="background:#E2E8F0; color:#1E293B; border-radius:4px; padding:2px 8px; font-size:0.75rem; font-weight:700;">{q['practice']}</span>
+                            <span style="font-size:0.74rem; color:#64748B; font-weight:600;">Butir Pertanyaan #{q_num}</span>
+                        </div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#0F172A; line-height:1.45; margin-bottom:6px;">
+                            {q['question']}
+                        </div>
+                        <div style="font-size:0.75rem; color:#64748B; font-style:italic; line-height:1.35;">
+                            <b>Ref ISACA COBIT 2019:</b> {q['desc_en']}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    items = df_info["items"]
+                    c_opt, _ = st.columns([2, 3])
+                    with c_opt:
+                        st.radio(
+                            f"Jawaban Butir {d_code} #{q_num}",
+                            options=["Ya (Terpenuhi / Diterapkan)", "Tidak (Belum Terpenuhi)"],
+                            index=(0 if saved_val == 1 else 1),
+                            key=f"u_chk_{d_code}_{q_num}",
+                            horizontal=True,
+                            label_visibility="collapsed"
+                        )
+                    st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
-                    if is_risk:
-                        opts5 = list(range(1, 6))
-                        labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
-                        f5 = lambda x: labels_5[x-1] if x else ""
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_cbtn, col_cinfo = st.columns([1.3, 2])
+        with col_cbtn:
+            if st.button("🚀 Kirim Jawaban Checklist ke Administrator", type="primary", use_container_width=True):
+                collected_chk = {}
+                for d_code, q_list in checklist_data.items():
+                    collected_chk[d_code] = {}
+                    for q in q_list:
+                        ans_str = st.session_state.get(f"u_chk_{d_code}_{q['num']}", "Tidak")
+                        collected_chk[d_code][q['num']] = 1 if "Ya" in ans_str else 0
+                
+                save_individual_checklist(user_p['id'], user_p['username'], user_p['fullname'], user_p['position'], collected_chk)
+                st.success("🎉 Terima kasih! Seluruh jawaban Checklist Wawancara 2 (124 butir) berhasil disimpan dan diserahkan ke Tim Administrator.")
+                st.balloons()
+                st.rerun()
+        with col_cinfo:
+            st.info("💡 **Hak Akses:** Data checklist tersimpan aman di database dan hanya dapat diolah serta dipublikasikan oleh Administrator.")
 
-                        col_ir1, col_ir2, col_lr1, col_lr2 = st.columns(4)
-                        with col_ir1:
-                            st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">🔴 Impact – R1</strong></div>""", unsafe_allow_html=True)
-                        with col_ir2:
-                            st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">🔴 Impact – R2</strong></div>""", unsafe_allow_html=True)
-                        with col_lr1:
-                            st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">🟡 Likelihood – R1</strong></div>""", unsafe_allow_html=True)
-                        with col_lr2:
-                            st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">🟡 Likelihood – R2</strong></div>""", unsafe_allow_html=True)
+elif "1. Pengolahan" in menu:
+    # ========================================================
+    # VIEW KHUSUS ADMINISTRATOR (PENGOLAHAN MULTI-RESPONDEN & MANUAL)
+    # ========================================================
+    st.markdown("""
+    <div style="margin-bottom:14px;">
+        <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">⚙️ Pengolahan Data Kuesioner Multi-Responden (DF1–DF10)</h2>
+        <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Pilih dan gabungkan data kuesioner dari responden terdaftar menggunakan algoritma Triangular Fuzzy Numbers (TFN)</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    tab_admin_multi, tab_admin_manual = st.tabs([
+        "👥 Pengolahan Multi-Responden (Data Database)", 
+        "✍️ Input / Simulasi Manual (2 Responden)"
+    ])
+    
+    with tab_admin_multi:
+        submitted_list = get_all_submitted_respondents()
+        
+        # KPI Summary Responden
+        m_col1, m_col2, m_col3 = st.columns(3)
+        with m_col1:
+            st.markdown(f"""
+            <div class="kpi-card kpi-card-cobit">
+                <div class="kpi-title">Responden Mengisi Kuesioner</div>
+                <div class="kpi-value">{len(submitted_list)}</div>
+                <div class="kpi-desc">Tersimpan di Basis Data</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m_col2:
+            lengkap_count = sum(1 for r in submitted_list if r['df_count'] >= 10)
+            st.markdown(f"""
+            <div class="kpi-card kpi-card-teal">
+                <div class="kpi-title">Kuesioner Lengkap 10 DF</div>
+                <div class="kpi-value">{lengkap_count}</div>
+                <div class="kpi-desc">Siap Diolah dengan TFN</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m_col3:
+            st.markdown(f"""
+            <div class="kpi-card kpi-card-gold">
+                <div class="kpi-title">Metode Defuzzifikasi</div>
+                <div class="kpi-value" style="font-size:1.3rem;">TFN Centroid</div>
+                <div class="kpi-desc">Standar ISACA COBIT 2019</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-                        rows = []
-                        for i, item in enumerate(items):
-                            st.markdown(f"<div style='font-size:0.86rem; font-weight:700; color:#1E293B; margin-top:8px;'>{i+1}. {item}</div>", unsafe_allow_html=True)
-                            c_ir1, c_ir2, c_lr1, c_lr2 = st.columns(4)
-                            with c_ir1:
-                                i_r1 = st.selectbox(f"I-R1", options=opts5, index=None, format_func=f5, placeholder="Pilih Impact R1", key=f"ir1_{df_code}_{i}", label_visibility="collapsed")
-                            with c_ir2:
-                                i_r2 = st.selectbox(f"I-R2", options=opts5, index=None, format_func=f5, placeholder="Pilih Impact R2", key=f"ir2_{df_code}_{i}", label_visibility="collapsed")
-                            with c_lr1:
-                                l_r1 = st.selectbox(f"L-R1", options=opts5, index=None, format_func=f5, placeholder="Pilih Likelihood R1", key=f"lr1_{df_code}_{i}", label_visibility="collapsed")
-                            with c_lr2:
-                                l_r2 = st.selectbox(f"L-R2", options=opts5, index=None, format_func=f5, placeholder="Pilih Likelihood R2", key=f"lr2_{df_code}_{i}", label_visibility="collapsed")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size:1.05rem; font-weight:700; color:#0F172A;'>📋 Daftar Responden yang Telah Mengisi Kuesioner:</h3>", unsafe_allow_html=True)
+        
+        if submitted_list:
+            df_sub_show = pd.DataFrame([
+                {
+                    "User ID": r["user_id"],
+                    "Username": r["username"],
+                    "Nama Responden": r["fullname"],
+                    "Jabatan / Unit": r["position"],
+                    "Cakupan DF": f"{r['df_count']} / 10 DF",
+                    "Waktu Pengisian": r["submitted_at"][:16] if r["submitted_at"] else "-"
+                }
+                for r in submitted_list
+            ])
+            st.dataframe(df_sub_show, use_container_width=True, hide_index=True)
+        else:
+            st.info("Belum ada responden yang mengisi kuesioner.")
 
-                            if any(v is None for v in [i_r1, i_r2, l_r1, l_r2]):
-                                rows.append({"indicator": item, "method": "Risk Profile (Fuzzy TFN)", "r1": None, "r2": None, "final": None, "final_display": "Belum Terisi", "rounded_toolkit": "-", "ir1": i_r1, "ir2": i_r2, "lr1": l_r1, "lr2": l_r2, "impact_val": None, "likelihood_val": None, "risk_rating": None})
-                            else:
-                                res = calc_risk_profile(i_r1, i_r2, l_r1, l_r2)
-                                rows.append({"indicator": item, "method": "Risk Profile (Fuzzy TFN)", "r1": res["impact_val"], "r2": res["likelihood_val"], "final": float(res["risk_rating"]), "final_display": str(res["risk_rating"]), "rounded_toolkit": str(res["risk_rating"]), "ir1": i_r1, "ir2": i_r2, "lr1": l_r1, "lr2": l_r2, "impact_val": res["impact_val"], "likelihood_val": res["likelihood_val"], "risk_rating": res["risk_rating"]})
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px 18px; margin-bottom:14px;">
+            <h3 style="margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0F172A;">⚡ Pasangkan & Olah Data Dua Responden (Fuzzy TFN)</h3>
+            <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Pilih Responden 1 (misal: Dept. SIU) dan Responden 2 (misal: Dept. IT) untuk diagregasikan secara matematis</p>
+        """, unsafe_allow_html=True)
+        
+        if len(submitted_list) >= 2:
+            resp_opts = {
+                f"{r['fullname']} ({r['position']}) — @{r['username']}": r["user_id"]
+                for r in submitted_list
+            }
+            opt_keys = list(resp_opts.keys())
+            
+            col_sel1, col_sel2 = st.columns(2)
+            with col_sel1:
+                r1_sel = st.selectbox("Pilih Responden 1 (R1 - Dept. SIU / Accountable):", options=opt_keys, index=0)
+            with col_sel2:
+                r2_sel = st.selectbox("Pilih Responden 2 (R2 - Dept. IT / Responsible):", options=opt_keys, index=1 if len(opt_keys) > 1 else 0)
+            
+            uid1 = resp_opts[r1_sel]
+            uid2 = resp_opts[r2_sel]
+            
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            if st.button("⚡ Gabungkan & Olah Data dengan Fuzzy TFN", type="primary", use_container_width=True):
+                aggregated_results = aggregate_two_respondents(uid1, uid2, df_definitions)
+                st.session_state.calculated_results = aggregated_results
+                
+                r1_name = r1_sel.split(" (")[0]
+                r2_name = r2_sel.split(" (")[0]
+                r_id = save_respondent_data(f"{r1_name} & {r2_name}", f"Agregat {r1_name} & {r2_name}", aggregated_results)
+                st.success(f"✅ Data kuesioner berhasil digabungkan dan diolah dengan Fuzzy TFN (Terekam dengan Respondent ID #{r_id})! Silakan buka **Modul 2** untuk melihat hasil analisis.")
+                st.balloons()
+        else:
+            st.warning("⚠️ Dibutuhkan minimal 2 responden yang telah mengisi kuesioner untuk melakukan penggabungan data secara otomatis. Silakan tunggu responden lain mengisi kuesioner, atau gunakan tab 'Input / Simulasi Manual'.")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        if st.session_state.calculated_results:
+            st.markdown("<h4 style='font-size:0.95rem; font-weight:700; color:#0F172A; margin-top:10px;'>📊 Preview Hasil Agregasi Aktif:</h4>", unsafe_allow_html=True)
+            sample_df = list(st.session_state.calculated_results.keys())[0]
+            sample_rows = st.session_state.calculated_results[sample_df]
+            prev_table = pd.DataFrame([{
+                "Indikator": r["indicator"],
+                "Skor R1": r["r1"],
+                "Skor R2": r["r2"],
+                "Nilai Akhir Agregat": r["final_display"],
+                "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
+            } for r in sample_rows[:5]])
+            st.dataframe(prev_table, use_container_width=True, hide_index=True)
+            st.caption("ℹ️ Menampilkan sampel hasil pengolahan data. Visualisasi lengkap dan Design Factor Map tersedia di Modul 2.")
 
-                        temp_results[df_code] = rows
+    with tab_admin_manual:
+        with st.expander(" Identitas Penilai & Metadata Audit", expanded=True):
+            col_resp_a, col_resp_b = st.columns(2)
+            resp_name = col_resp_a.text_input("Nama Penilai / Lead Auditor:", value="", placeholder="Ketik nama penilai...", key="m_resp_name")
+            resp_pos = col_resp_b.text_input("Jabatan / Unit Kerja Evaluasi:", value="", placeholder="Ketik jabatan penilai...", key="m_resp_pos")
 
-                        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-                        if any(r["final"] is None for r in rows):
-                            st.info(f"Pertanyaan pada **{df_code}** belum lengkap terisi.")
+        tab_labels = [f"{code}" for code in df_definitions.keys()]
+        tabs = st.tabs(tab_labels)
+        temp_results = {}
+
+        for idx, (df_code, df_info) in enumerate(df_definitions.items()):
+            with tabs[idx]:
+                is_fuzzy = (df_info["type"] == "fuzzy")
+                is_risk  = (df_info["type"] == "risk_profile")
+                method_badge = "Fuzzy TFN" if (is_fuzzy or is_risk) else " Direct Percentage"
+                scale_badge  = f"Skala 1-{df_info['scale']}" if (is_fuzzy or is_risk) else "Skala 0-100%"
+                
+                st.markdown(f"""
+                <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px 18px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div>
+                            <h3 style="margin:0; font-size:1.05rem; font-weight:700; color:#0F172A;">{df_info["title"]}</h3>
+                            <p style="margin:3px 0 0 0; color:#64748B; font-size:0.82rem;">{df_info["desc"]}</p>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <span style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600;">{method_badge}</span>
+                            <span style="background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; padding:3px 9px; border-radius:6px; font-size:0.72rem; font-weight:600;">{scale_badge}</span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                items = df_info["items"]
+
+                if is_risk:
+                    opts5 = list(range(1, 6))
+                    labels_5 = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"]
+                    f5 = lambda x: labels_5[x-1] if x else ""
+
+                    col_ir1, col_ir2, col_lr1, col_lr2 = st.columns(4)
+                    with col_ir1:
+                        st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">🔴 Impact – R1</strong></div>""", unsafe_allow_html=True)
+                    with col_ir2:
+                        st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">🔴 Impact – R2</strong></div>""", unsafe_allow_html=True)
+                    with col_lr1:
+                        st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">🟡 Likelihood – R1</strong></div>""", unsafe_allow_html=True)
+                    with col_lr2:
+                        st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">🟡 Likelihood – R2</strong></div>""", unsafe_allow_html=True)
+
+                    rows = []
+                    for i, item in enumerate(items):
+                        st.markdown(f"<div style='font-size:0.86rem; font-weight:700; color:#1E293B; margin-top:8px;'>{i+1}. {item}</div>", unsafe_allow_html=True)
+                        c_ir1, c_ir2, c_lr1, c_lr2 = st.columns(4)
+                        with c_ir1:
+                            i_r1 = st.selectbox(f"I-R1", options=opts5, index=None, format_func=f5, placeholder="Pilih Impact R1", key=f"ir1_{df_code}_{i}", label_visibility="collapsed")
+                        with c_ir2:
+                            i_r2 = st.selectbox(f"I-R2", options=opts5, index=None, format_func=f5, placeholder="Pilih Impact R2", key=f"ir2_{df_code}_{i}", label_visibility="collapsed")
+                        with c_lr1:
+                            l_r1 = st.selectbox(f"L-R1", options=opts5, index=None, format_func=f5, placeholder="Pilih Likelihood R1", key=f"lr1_{df_code}_{i}", label_visibility="collapsed")
+                        with c_lr2:
+                            l_r2 = st.selectbox(f"L-R2", options=opts5, index=None, format_func=f5, placeholder="Pilih Likelihood R2", key=f"lr2_{df_code}_{i}", label_visibility="collapsed")
+
+                        if any(v is None for v in [i_r1, i_r2, l_r1, l_r2]):
+                            rows.append({"indicator": item, "method": "Risk Profile (Fuzzy TFN)", "r1": None, "r2": None, "final": None, "final_display": "Belum Terisi", "rounded_toolkit": "-", "ir1": i_r1, "ir2": i_r2, "lr1": l_r1, "lr2": l_r2, "impact_val": None, "likelihood_val": None, "risk_rating": None})
                         else:
-                            st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi Risk Profile (Impact × Likelihood):")
-                            df_prev_risk = pd.DataFrame([{
-                                "Skenario Risiko": r["indicator"],
-                                "I-R1": r["ir1"], "I-R2": r["ir2"], "Impact (Bulat)": r["impact_val"],
-                                "L-R1": r["lr1"], "L-R2": r["lr2"], "Likelihood (Bulat)": r["likelihood_val"],
-                                "Risk Rating": r["risk_rating"]
-                            } for r in rows])
-                            st.dataframe(df_prev_risk, use_container_width=True)
+                            res = calc_risk_profile(i_r1, i_r2, l_r1, l_r2)
+                            rows.append({"indicator": item, "method": "Risk Profile (Fuzzy TFN)", "r1": res["impact_val"], "r2": res["likelihood_val"], "final": float(res["risk_rating"]), "final_display": str(res["risk_rating"]), "rounded_toolkit": str(res["risk_rating"]), "ir1": i_r1, "ir2": i_r2, "lr1": l_r1, "lr2": l_r2, "impact_val": res["impact_val"], "likelihood_val": res["likelihood_val"], "risk_rating": res["risk_rating"]})
 
-                    elif is_fuzzy:
-                        scale_m = df_info["scale"]
-                        opts = list(range(1, scale_m + 1))
-                        labels = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"] if scale_m == 5 else ["1 - No Issue", "2 - Issue", "3 - Serious Issue"]
-                        f_lbl = lambda x: labels[x-1] if x else ""
+                    temp_results[df_code] = rows
 
-                        col_head_a, col_head_b = st.columns(2)
-                        with col_head_a:
-                            st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">Responden 1 (Dept. SIU / Accountable)</strong></div>""", unsafe_allow_html=True)
-                        with col_head_b:
-                            st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">Responden 2 (Dept. IT / Responsible)</strong></div>""", unsafe_allow_html=True)
-
-                        rows = []
-                        for i, item in enumerate(items):
-                            c1, c2 = st.columns(2)
-                            with c1:
-                                r1 = st.selectbox(f"{item} (R1)", options=opts, index=None, format_func=f_lbl, placeholder="-- Pilih Nilai R1 --", key=f"r1_{df_code}_{i}")
-                            with c2:
-                                r2 = st.selectbox(f"{item} (R2)", options=opts, index=None, format_func=f_lbl, placeholder="-- Pilih Nilai R2 --", key=f"r2_{df_code}_{i}")
-
-                            if r1 is None or r2 is None:
-                                rows.append({"indicator": item, "method": "Fuzzy Logic TFN", "r1": r1, "r2": r2, "final": None, "final_display": "Belum Terisi", "rounded_toolkit": "-"})
-                            else:
-                                final_sc = calc_fuzzy_5(r1, r2) if scale_m == 5 else calc_fuzzy_3(r1, r2)
-                                rows.append({"indicator": item, "method": "Fuzzy Logic TFN", "r1": r1, "r2": r2, "final": final_sc, "final_display": f"{final_sc:.2f}", "rounded_toolkit": str(int(round(final_sc)))})
-
-                        temp_results[df_code] = rows
-
-                        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-                        if any(r["final"] is None for r in rows):
-                            st.info(f"Indikator pada **{df_code}** masih kosong. Silakan lengkapi seluruh pertanyaan di atas.")
-                        else:
-                            st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
-                            df_prev_fuz = pd.DataFrame([{
-                                "Indikator": r["indicator"], "R1": r["r1"], "R2": r["r2"],
-                                "Nilai Akhir Agregat": r["final_display"], "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
-                            } for r in rows])
-                            st.dataframe(df_prev_fuz, use_container_width=True)
-
-                    else: # percentage
-                        col_head_a, col_head_b = st.columns(2)
-                        with col_head_a:
-                            st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">Responden 1 (Dept. SIU)</strong></div>""", unsafe_allow_html=True)
-                        with col_head_b:
-                            st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">Responden 2 (Dept. IT)</strong></div>""", unsafe_allow_html=True)
-
-                        rows = []
-                        for i, item in enumerate(items):
-                            c1, c2 = st.columns(2)
-                            with c1:
-                                r1 = st.number_input(f"{item} - R1", min_value=0.0, max_value=100.0, value=None, step=5.0, placeholder="Persentase R1 (0-100%)...", key=f"r1_{df_code}_{i}")
-                            with c2:
-                                r2 = st.number_input(f"{item} - R2", min_value=0.0, max_value=100.0, value=None, step=5.0, placeholder="Persentase R2 (0-100%)...", key=f"r2_{df_code}_{i}")
-
-                            if r1 is None or r2 is None:
-                                rows.append({"indicator": item, "method": "Direct Percentage (%)", "r1": r1, "r2": r2, "final": None, "final_display": "Belum Terisi", "rounded_toolkit": "-"})
-                            else:
-                                final_sc = calc_percentage_avg(r1, r2)
-                                rows.append({"indicator": item, "method": "Direct Percentage (%)", "r1": r1, "r2": r2, "final": final_sc, "final_display": f"{final_sc:.1f}%", "rounded_toolkit": f"{int(round(final_sc))}%"})
-
-                        temp_results[df_code] = rows
-
-                        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-                        if any(r["final"] is None for r in rows):
-                            st.info(f"Indikator pada **{df_code}** masih kosong.")
-                        else:
-                            st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
-                            df_prev_pct = pd.DataFrame([{
-                                "Indikator": r["indicator"], "R1": r["r1"], "R2": r["r2"],
-                                "Nilai Akhir Agregat": r["final_display"], "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
-                            } for r in rows])
-                            st.dataframe(df_prev_pct, use_container_width=True)
-
-            st.session_state.calculated_results = temp_results
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            col_save, col_info_box = st.columns([1.2, 2])
-            with col_save:
-                if st.button("Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
-                    st.session_state.calculated_results = temp_results
-                    incomplete_dfs = [
-                        code for code, r_list in temp_results.items()
-                        if any(r["final"] is None for r in r_list)
-                    ]
-                    if resp_name.strip() == "":
-                        st.error("Silakan isi nama penilai terlebih dahulu.")
-                    elif incomplete_dfs:
-                        st.warning(f"Penilaian belum lengkap! Terdapat {len(incomplete_dfs)} Design Factor yang masih memiliki nilai kosong: {', '.join(incomplete_dfs)}.")
+                    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+                    if any(r["final"] is None for r in rows):
+                        st.info(f"Pertanyaan pada **{df_code}** belum lengkap terisi.")
                     else:
-                        r_id = save_respondent_data(resp_name, resp_pos, temp_results)
-                        st.success(f"Penilaian lengkap berhasil direkam ke database dengan Respondent ID #{r_id}!")
-            with col_info_box:
-                st.info(" Data yang telah lengkap diisi di atas langsung terhubung ke menu **Visualisasi & Rekapitulasi**.")
+                        st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi Risk Profile (Impact × Likelihood):")
+                        df_prev_risk = pd.DataFrame([{
+                            "Skenario Risiko": r["indicator"],
+                            "I-R1": r["ir1"], "I-R2": r["ir2"], "Impact (Bulat)": r["impact_val"],
+                            "L-R1": r["lr1"], "L-R2": r["lr2"], "Likelihood (Bulat)": r["likelihood_val"],
+                            "Risk Rating": r["risk_rating"]
+                        } for r in rows])
+                        st.dataframe(df_prev_risk, use_container_width=True)
+
+                elif is_fuzzy:
+                    scale_m = df_info["scale"]
+                    opts = list(range(1, scale_m + 1))
+                    labels = ["1 - Sangat Rendah", "2 - Rendah", "3 - Sedang", "4 - Tinggi", "5 - Sangat Tinggi"] if scale_m == 5 else ["1 - No Issue", "2 - Issue", "3 - Serious Issue"]
+                    f_lbl = lambda x: labels[x-1] if x else ""
+
+                    col_head_a, col_head_b = st.columns(2)
+                    with col_head_a:
+                        st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">Responden 1 (Dept. SIU / Accountable)</strong></div>""", unsafe_allow_html=True)
+                    with col_head_b:
+                        st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">Responden 2 (Dept. IT / Responsible)</strong></div>""", unsafe_allow_html=True)
+
+                    rows = []
+                    for i, item in enumerate(items):
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            r1 = st.selectbox(f"{item} (R1)", options=opts, index=None, format_func=f_lbl, placeholder="-- Pilih Nilai R1 --", key=f"r1_{df_code}_{i}")
+                        with c2:
+                            r2 = st.selectbox(f"{item} (R2)", options=opts, index=None, format_func=f_lbl, placeholder="-- Pilih Nilai R2 --", key=f"r2_{df_code}_{i}")
+
+                        if r1 is None or r2 is None:
+                            rows.append({"indicator": item, "method": "Fuzzy Logic TFN", "r1": r1, "r2": r2, "final": None, "final_display": "Belum Terisi", "rounded_toolkit": "-"})
+                        else:
+                            final_sc = calc_fuzzy_5(r1, r2) if scale_m == 5 else calc_fuzzy_3(r1, r2)
+                            rows.append({"indicator": item, "method": "Fuzzy Logic TFN", "r1": r1, "r2": r2, "final": final_sc, "final_display": f"{final_sc:.2f}", "rounded_toolkit": str(int(round(final_sc)))})
+
+                    temp_results[df_code] = rows
+
+                    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+                    if any(r["final"] is None for r in rows):
+                        st.info(f"Indikator pada **{df_code}** masih kosong. Silakan lengkapi seluruh pertanyaan di atas.")
+                    else:
+                        st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
+                        df_prev_fuz = pd.DataFrame([{
+                            "Indikator": r["indicator"], "R1": r["r1"], "R2": r["r2"],
+                            "Nilai Akhir Agregat": r["final_display"], "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
+                        } for r in rows])
+                        st.dataframe(df_prev_fuz, use_container_width=True)
+
+                else: # percentage
+                    col_head_a, col_head_b = st.columns(2)
+                    with col_head_a:
+                        st.markdown("""<div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#4338CA; font-size:0.82rem;">Responden 1 (Dept. SIU)</strong></div>""", unsafe_allow_html=True)
+                    with col_head_b:
+                        st.markdown("""<div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:8px 12px; margin-bottom:10px; text-align:center;"><strong style="color:#15803D; font-size:0.82rem;">Responden 2 (Dept. IT)</strong></div>""", unsafe_allow_html=True)
+
+                    rows = []
+                    for i, item in enumerate(items):
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            r1 = st.number_input(f"{item} - R1", min_value=0.0, max_value=100.0, value=None, step=5.0, placeholder="Persentase R1 (0-100%)...", key=f"r1_{df_code}_{i}")
+                        with c2:
+                            r2 = st.number_input(f"{item} - R2", min_value=0.0, max_value=100.0, value=None, step=5.0, placeholder="Persentase R2 (0-100%)...", key=f"r2_{df_code}_{i}")
+
+                        if r1 is None or r2 is None:
+                            rows.append({"indicator": item, "method": "Direct Percentage (%)", "r1": r1, "r2": r2, "final": None, "final_display": "Belum Terisi", "rounded_toolkit": "-"})
+                        else:
+                            final_sc = calc_percentage_avg(r1, r2)
+                            rows.append({"indicator": item, "method": "Direct Percentage (%)", "r1": r1, "r2": r2, "final": final_sc, "final_display": f"{final_sc:.1f}%", "rounded_toolkit": f"{int(round(final_sc))}%"})
+
+                    temp_results[df_code] = rows
+
+                    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+                    if any(r["final"] is None for r in rows):
+                        st.info(f"Indikator pada **{df_code}** masih kosong.")
+                    else:
+                        st.success(f"Penilaian **{df_code}** lengkap terisi! Hasil kalkulasi agregat:")
+                        df_prev_pct = pd.DataFrame([{
+                            "Indikator": r["indicator"], "R1": r["r1"], "R2": r["r2"],
+                            "Nilai Akhir Agregat": r["final_display"], "Input Toolkit (Dibulatkan)": r["rounded_toolkit"]
+                        } for r in rows])
+                        st.dataframe(df_prev_pct, use_container_width=True)
+
+        st.session_state.calculated_results = temp_results
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_save, col_info_box = st.columns([1.2, 2])
+        with col_save:
+            if st.button("Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
+                st.session_state.calculated_results = temp_results
+                incomplete_dfs = [
+                    code for code, r_list in temp_results.items()
+                    if any(r["final"] is None for r in r_list)
+                ]
+                if resp_name.strip() == "":
+                    st.error("Silakan isi nama penilai terlebih dahulu.")
+                elif incomplete_dfs:
+                    st.warning(f"Penilaian belum lengkap! Terdapat {len(incomplete_dfs)} Design Factor yang masih memiliki nilai kosong: {', '.join(incomplete_dfs)}.")
+                else:
+                    r_id = save_respondent_data(resp_name, resp_pos, temp_results)
+                    st.success(f"Penilaian lengkap berhasil direkam ke database dengan Respondent ID #{r_id}!")
+        with col_info_box:
+            st.info(" Data yang telah lengkap diisi di atas langsung terhubung ke menu **Visualisasi & Rekapitulasi**.")
 
 # ----------------------------------------------------
 # MODUL 2: REKAPITULASI & VISUALISASI DESIGN FACTOR
@@ -1545,11 +1681,12 @@ elif "3. Riwayat" in menu:
     df_cap_history = pd.read_sql_query("SELECT id, domain_code, as_is_level, to_be_level, gap, achievement_pct, rating_scale, created_at FROM capability_assessments ORDER BY id DESC", conn)
     conn.close()
     
-    tab_db1, tab_db2, tab_db3, tab_db4 = st.tabs([
-        "📋 Jawaban Per-Responden", 
+    tab_db1, tab_db2, tab_db3, tab_db4, tab_db5 = st.tabs([
+        "📋 Jawaban DF1–DF10", 
         "👥 Riwayat Agregat Responden", 
         "👤 Akun Auditor & Pengguna", 
-        "📈 Riwayat Kapabilitas"
+        "📈 Riwayat Kapabilitas",
+        "📑 Checklist Wawancara 2"
     ])
     
     with tab_db1:
@@ -1579,6 +1716,16 @@ elif "3. Riwayat" in menu:
         else:
             st.dataframe(df_cap_history, use_container_width=True)
 
+    with tab_db5:
+        conn_chk = sqlite3.connect(DB_FILE)
+        df_chk_db = pd.read_sql_query("SELECT id, username, fullname, position, domain_code, question_num, answer_val, submitted_at FROM individual_checklist_responses ORDER BY id DESC", conn_chk)
+        conn_chk.close()
+        if df_chk_db.empty:
+            st.info("Belum ada data jawaban checklist Wawancara 2 di database.")
+        else:
+            df_chk_db['Status Jawaban'] = df_chk_db['answer_val'].apply(lambda x: '✅ Ya (Terpenuhi)' if x == 1 else '❌ Tidak (Belum Terpenuhi)')
+            st.dataframe(df_chk_db, use_container_width=True)
+
 # ----------------------------------------------------
 # MODUL 4: CAPABILITY LEVEL & EXPORT PDF
 # ----------------------------------------------------
@@ -1601,52 +1748,298 @@ elif "4. Capability" in menu:
     
     st.markdown("""
     <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:16px 18px; margin-bottom:16px;">
-        <h3 style="margin:0 0 4px 0; font-size:1.05rem; font-weight:700; color:#0F172A;"> Input Persentase Pencapaian (4 Domain Prioritas UNKLAB)</h3>
-        <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Geser slider untuk menentukan persentase pemenuhan pada masing-masing domain audit</p>
+        <h3 style="margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0F172A;">📊 Sumber Data Penilaian Kapabilitas (Capability Level)</h3>
+        <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Pilih metode penentuan persentase pencapaian proses dari Wawancara 2 (Checklist Biner) atau preset data skripsi</p>
     """, unsafe_allow_html=True)
     
-    col_cap1, col_cap2 = st.columns(2)
-    with col_cap1:
-        p_apo12 = st.slider("1. APO12 — Managed Risk (%)", 0, 100, 0, help="Manajemen Risiko TI Institusi")
-        p_apo13 = st.slider("2. APO13 — Managed Security (%)", 0, 100, 0, help="Sistem Manajemen Keamanan Informasi")
-    with col_cap2:
-        p_dss05 = st.slider("3. DSS05 — Security Services (%)", 0, 100, 0, help="Operasional Layanan Keamanan Jaringan & Data")
-        p_mea03 = st.slider("4. MEA03 — Managed Compliance (%)", 0, 100, 0, help="Kepatuhan terhadap Regulasi Eksternal & Internal")
-        
+    cap_mode = st.radio(
+        "Metode Penentuan Nilai Kapabilitas:",
+        [
+            "📋 Integrasi Otomatis dari Checklist Wawancara 2 (Data Responden)",
+            "⚡ Preset Data Aktual Skripsi UNKLAB (Novanca Tulende)",
+            "✍️ Simulasi Manual (Slider Bebas)"
+        ],
+        index=0,
+        label_visibility="collapsed"
+    )
+    
     st.markdown("</div>", unsafe_allow_html=True)
 
-    domain_inputs = [
-        ("APO12 - Managed Risk", p_apo12),
-        ("APO13 - Managed Security", p_apo13),
-        ("DSS05 - Security Services", p_dss05),
-        ("MEA03 - Compliance", p_mea03)
-    ]
+    # Inisialisasi dictionary hasil capaian 4 domain
+    domain_scores = {}
+    checklist_full_questions = load_checklist_questions()
+    selected_evidence_answers = {}
+
+    if "Integrasi Otomatis" in cap_mode:
+        all_chk_resps = get_all_checklist_submitted_respondents()
+        col_src1, col_src2 = st.columns([1.5, 2])
+        with col_src1:
+            resp_options = ["Konsensus Gabungan (Rata-rata Responden)"]
+            if all_chk_resps:
+                resp_options += [f"{r['fullname']} ({r['username']}) - {r['q_count']} butir" for r in all_chk_resps]
+            sel_chk_source = st.selectbox("Pilih Sumber Jawaban Responden:", resp_options)
+
+        with col_src2:
+            st.info("💡 **Metode Wawancara 2:** Menggunakan rasio biner murni tanpa Fuzzy Logic: $\\text{Pencapaian (\\%)} = \\frac{\\sum \\text{Ya}}{\\text{Total Pertanyaan}} \\times 100\\%$.")
+
+        # Hitung skor berdasarkan sumber yang dipilih
+        if "Konsensus" in sel_chk_source:
+            # Ambil jawaban responden1 & responden2
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT id, username FROM users WHERE username IN ('responden1', 'responden2')")
+            u_rows = cur.fetchall()
+            conn.close()
+            
+            all_u_answers = [get_user_checklist_answers(uid) for uid, _ in u_rows]
+            selected_evidence_answers = all_u_answers[0] if all_u_answers else {}
+            
+            for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
+                q_list = checklist_full_questions.get(d_code, [])
+                total_q = len(q_list)
+                if total_q == 0:
+                    domain_scores[d_code] = {"ya": 0, "total": 0, "pct": 0.0, "rating": "N - Not Achieved (0-14%)", "as_is": 0}
+                    continue
+                
+                # Rata-rata persentase antar responden
+                pct_sum = 0.0
+                for u_ans in all_u_answers:
+                    d_ans = u_ans.get(d_code, {})
+                    ya_c = sum(1 for q in q_list if d_ans.get(q['num']) == 1)
+                    pct_sum += (ya_c / total_q) * 100.0
+                
+                avg_pct = round(pct_sum / len(all_u_answers), 2) if all_u_answers else 0.0
+                rating_str, as_is_val = get_rating_level_cobit(avg_pct)
+                domain_scores[d_code] = {
+                    "ya": int(round((avg_pct / 100.0) * total_q)),
+                    "total": total_q,
+                    "pct": avg_pct,
+                    "rating": rating_str,
+                    "as_is": as_is_val
+                }
+        else:
+            # Responden spesifik
+            target_username = sel_chk_source.split("(")[1].split(")")[0].strip()
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT id FROM users WHERE username = ?", (target_username,))
+            r_row = cur.fetchone()
+            conn.close()
+            
+            target_uid = r_row[0] if r_row else None
+            user_chk_ans = get_user_checklist_answers(target_uid) if target_uid else {}
+            selected_evidence_answers = user_chk_ans
+            
+            for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
+                calc_res = calculate_domain_checklist_score(d_code, user_chk_ans, checklist_full_questions)
+                domain_scores[d_code] = {
+                    "ya": calc_res["ya"],
+                    "total": calc_res["total"],
+                    "pct": calc_res["pct"],
+                    "rating": calc_res["rating"],
+                    "as_is": calc_res["as_is_lvl"]
+                }
+
+    elif "Preset Data Aktual" in cap_mode:
+        preset_data = get_preset_skripsi_capability()
+        for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
+            domain_scores[d_code] = {
+                "ya": preset_data[d_code]["ya"],
+                "total": preset_data[d_code]["total"],
+                "pct": preset_data[d_code]["pct"],
+                "rating": preset_data[d_code]["rating"],
+                "as_is": preset_data[d_code]["as_is"]
+            }
+        # Gunakan jawaban responden1 sebagai referensi bukti
+        conn = sqlite3.connect(DB_FILE)
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM users WHERE username = 'responden1'")
+        r_row = cur.fetchone()
+        conn.close()
+        selected_evidence_answers = get_user_checklist_answers(r_row[0]) if r_row else {}
+
+    else: # Simulasi Manual Slider
+        st.markdown("""
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+            <span style="font-size:0.83rem; color:#475569;">Sesuaikan persentase capaian pemenuhan proses secara manual di bawah ini:</span>
+        </div>
+        """, unsafe_allow_html=True)
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            p_apo12 = st.slider("1. APO12 — Managed Risk (%)", 0.0, 100.0, 8.0, step=0.5)
+            p_apo13 = st.slider("2. APO13 — Managed Security (%)", 0.0, 100.0, 42.0, step=0.5)
+        with col_s2:
+            p_dss05 = st.slider("3. DSS05 — Security Services (%)", 0.0, 100.0, 75.0, step=0.5)
+            p_mea03 = st.slider("4. MEA03 — Managed Compliance (%)", 0.0, 100.0, 31.0, step=0.5)
+
+        for d_code, p_val, tot_val in [("APO12", p_apo12, 36), ("APO13", p_apo13, 19), ("DSS05", p_dss05, 49), ("MEA03", p_mea03, 20)]:
+            r_str, as_is_val = get_rating_level_cobit(p_val)
+            domain_scores[d_code] = {
+                "ya": int(round((p_val / 100.0) * tot_val)),
+                "total": tot_val,
+                "pct": p_val,
+                "rating": r_str,
+                "as_is": as_is_val
+            }
+
+    # Pilihan Target Level To-Be
+    col_tgt1, col_tgt2 = st.columns([1.2, 2.8])
+    with col_tgt1:
+        target_lvl = st.selectbox(
+            "🎯 Target Capability Level (To-Be):",
+            options=[1, 2, 3, 4, 5],
+            index=3, # Default Level 4 (sesuai target skripsi UNKLAB)
+            help="Sesuai target standar skripsi UNKLAB: Level 4 (Quantitative / Predictable)"
+        )
+    with col_tgt2:
+        st.caption(f"Target yang ditetapkan: **Level {target_lvl}** &bull; Skripsi UNKLAB menargetkan Level 4 pada 4 Domain Prioritas Tata Kelola TI.")
+
+    # Susun cap_list untuk visualisasi & tabel gap
+    domain_display_names = {
+        "APO12": "APO12 — Managed Risk",
+        "APO13": "APO13 — Managed Security",
+        "DSS05": "DSS05 — Security Services",
+        "MEA03": "MEA03 — Compliance"
+    }
 
     cap_list = []
-    for d_code, pct in domain_inputs:
-        rating, as_is_lvl = get_rating_level_cobit(pct)
-        target_lvl = 3
+    for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
+        d_info = domain_scores[d_code]
+        as_is_lvl = d_info["as_is"]
         cap_list.append({
-            "domain": d_code, 
-            "as_is": as_is_lvl, 
-            "to_be": target_lvl, 
-            "gap": target_lvl - as_is_lvl, 
-            "pct": pct, 
-            "rating": rating
+            "domain_code": d_code,
+            "domain": domain_display_names[d_code],
+            "ya": d_info["ya"],
+            "total": d_info["total"],
+            "as_is": as_is_lvl,
+            "to_be": target_lvl,
+            "gap": max(0, target_lvl - as_is_lvl),
+            "pct": d_info["pct"],
+            "rating": d_info["rating"]
         })
 
+    # KPI Summary Cards (4 Domain + Rata-rata Institusi)
+    avg_inst_pct = round(sum(item['pct'] for item in cap_list) / 4.0, 2)
+    avg_inst_as_is = int(round(sum(item['as_is'] for item in cap_list) / 4.0))
+    avg_inst_gap = max(0, target_lvl - avg_inst_as_is)
+
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+    c_k1, c_k2, c_k3, c_k4, c_k5 = st.columns(5)
+    with c_k1:
+        st.markdown(f"""
+        <div class="kpi-card kpi-card-cobit">
+            <div class="kpi-title">APO12 — Risk</div>
+            <div class="kpi-value">{cap_list[0]['pct']:.1f}%</div>
+            <div class="kpi-desc">Level {cap_list[0]['as_is']} &bull; {cap_list[0]['ya']}/{cap_list[0]['total']} Ya</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c_k2:
+        st.markdown(f"""
+        <div class="kpi-card kpi-card-cobit">
+            <div class="kpi-title">APO13 — Security</div>
+            <div class="kpi-value">{cap_list[1]['pct']:.1f}%</div>
+            <div class="kpi-desc">Level {cap_list[1]['as_is']} &bull; {cap_list[1]['ya']}/{cap_list[1]['total']} Ya</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c_k3:
+        st.markdown(f"""
+        <div class="kpi-card kpi-card-cobit">
+            <div class="kpi-title">DSS05 — Services</div>
+            <div class="kpi-value">{cap_list[2]['pct']:.1f}%</div>
+            <div class="kpi-desc">Level {cap_list[2]['as_is']} &bull; {cap_list[2]['ya']}/{cap_list[2]['total']} Ya</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c_k4:
+        st.markdown(f"""
+        <div class="kpi-card kpi-card-cobit">
+            <div class="kpi-title">MEA03 — Compliance</div>
+            <div class="kpi-value">{cap_list[3]['pct']:.1f}%</div>
+            <div class="kpi-desc">Level {cap_list[3]['as_is']} &bull; {cap_list[3]['ya']}/{cap_list[3]['total']} Ya</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c_k5:
+        st.markdown(f"""
+        <div class="kpi-card kpi-card-gold">
+            <div class="kpi-title">Rata-rata Institusi</div>
+            <div class="kpi-value">{avg_inst_pct:.1f}%</div>
+            <div class="kpi-desc">Level {avg_inst_as_is} (Gap: {avg_inst_gap} Level)</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ========================================================
+    # AUDIT TRAIL / EVIDENCE EXPLORER (124 BUTIR CHECKLIST)
+    # ========================================================
+    with st.expander("🔍 Audit Trail & Tinjauan Bukti: 124 Butir Checklist Wawancara 2", expanded=False):
+        st.markdown("""
+        <p style="font-size:0.83rem; color:#64748B; margin-bottom:12px;">
+            Daftar lengkap 124 butir checklist dari 4 domain prioritas UNKLAB berdasarkan dokumen wawancara resmi.
+        </p>
+        """, unsafe_allow_html=True)
+        
+        col_flt1, col_flt2 = st.columns(2)
+        with col_flt1:
+            flt_dom = st.selectbox("Filter Domain:", ["Semua Domain", "APO12", "APO13", "DSS05", "MEA03"])
+        with col_flt2:
+            flt_st = st.selectbox("Filter Status Jawaban:", ["Semua Status", "Hanya Belum Terpenuhi (Tidak)", "Hanya Terpenuhi (Ya)"])
+        
+        evidence_rows = []
+        for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
+            if flt_dom != "Semua Domain" and flt_dom != d_code:
+                continue
+            q_list = checklist_full_questions.get(d_code, [])
+            d_ans = selected_evidence_answers.get(d_code, {})
+            for q in q_list:
+                ans_val = d_ans.get(q['num'], 0)
+                if flt_st == "Hanya Terpenuhi (Ya)" and ans_val != 1:
+                    continue
+                if flt_st == "Hanya Belum Terpenuhi (Tidak)" and ans_val != 0:
+                    continue
+                evidence_rows.append({
+                    "Domain": d_code,
+                    "Praktik": q['practice'],
+                    "No": q['num'],
+                    "Pertanyaan Wawancara": q['question'],
+                    "Status": "✅ Ya" if ans_val == 1 else "❌ Tidak",
+                    "Referensi ISACA COBIT 2019": q['desc_en']
+                })
+        
+        if evidence_rows:
+            df_evidence = pd.DataFrame(evidence_rows)
+            st.dataframe(df_evidence, use_container_width=True)
+        else:
+            st.info("Tidak ada butir checklist yang cocok dengan filter yang dipilih.")
+
+    # ========================================================
+    # REKOMENDASI PERBAIKAN BERDASARKAN TEMUAN CHECKLIST
+    # ========================================================
+    with st.expander("📋 Rekomendasi Strategis Berdasarkan Temuan Gap Wawancara 2", expanded=True):
+        st.markdown("""
+        <div style="font-size:0.85rem; color:#1E293B; line-height:1.6;">
+            <b>Rekomendasi Berdasarkan Analisis Temuan Lapangan:</b><br>
+            • <b>APO12 (Managed Risk — 8.00% / Level 0):</b> Institusi belum memiliki Register Risiko TI formal dan metodologi asesmen risiko berkala. Disarankan menyusun panduan manajemen risiko TI dan menetapkan batas toleransi risiko institusi.<br>
+            • <b>APO13 (Managed Security — 42.00% / Level 1):</b> Perlu memformalkan dokumen Kebijakan Sistem Manajemen Keamanan Informasi (SMKI), menunjuk Tim Tanggap Insiden Keamanan Siber (CSIRT), serta mengadakan sosialisasi berkala mengenai keamanan data bagi civitas akademika.<br>
+            • <b>DSS05 (Security Services — 75.00% / Level 2):</b> Sebagian besar kontrol malware dan pengamanan endpoint telah berjalan baik. Perlu ditingkatkan peninjauan rutin hak akses istimewa pimpinan/staf (access privilege review) dan monitoring log audit berkala.<br>
+            • <b>MEA03 (Managed Compliance — 31.00% / Level 1):</b> Disarankan membentuk matriks kepatuhan terpadu untuk memastikan keselarasan operasional TI terhadap regulasi eksternal (UU Pelindungan Data Pribadi / PDP dan standar akreditasi BAN-PT/Kemendikbudristek).
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ========================================================
+    # VISUALISASI GRAFIK
+    # ========================================================
     col_cap_chart1, col_cap_chart2 = st.columns(2)
     
     with col_cap_chart1:
-        st.markdown("""
+        st.markdown(f"""
         <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow: 0 4px 14px -2px rgba(15,23,42,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <strong style="color:#0F172A; font-size:0.95rem;"> Tingkat Kapabilitas: As-Is vs To-Be</strong>
-                <span style="font-size:0.72rem; background:#FEF3C7; color:#92400E; padding:2px 7px; border-radius:4px; font-weight:600;">Target: Level 3</span>
+                <strong style="color:#0F172A; font-size:0.95rem;">📊 Tingkat Kapabilitas: As-Is vs To-Be</strong>
+                <span style="font-size:0.72rem; background:#FEF3C7; color:#92400E; padding:2px 7px; border-radius:4px; font-weight:600;">Target: Level {target_lvl}</span>
             </div>
         """, unsafe_allow_html=True)
         
-        domains_short = [x['domain'].split()[0] for x in cap_list]
+        domains_short = [x['domain_code'] for x in cap_list]
         fig_cap, ax_cap = plt.subplots(figsize=(5.5, 4.0), dpi=150)
         fig_cap.patch.set_facecolor('#FFFFFF')
         ax_cap.set_facecolor('#FFFFFF')
@@ -1655,12 +2048,12 @@ elif "4. Capability" in menu:
         width = 0.32
         
         rects1 = ax_cap.bar(x - width/2, [x['as_is'] for x in cap_list], width, label='Level As-Is (Saat Ini)', color='#D97706', edgecolor='none')
-        rects2 = ax_cap.bar(x + width/2, [x['to_be'] for x in cap_list], width, label='Level To-Be (Target)', color='#1E3A8A', edgecolor='none')
+        rects2 = ax_cap.bar(x + width/2, [x['to_be'] for x in cap_list], width, label=f'Level To-Be (Target {target_lvl})', color='#1E3A8A', edgecolor='none')
         
         ax_cap.set_xticks(x)
         ax_cap.set_xticklabels(domains_short, fontweight='bold', fontsize=9, color='#0F172A')
-        ax_cap.set_ylim(0, 4.2)
-        ax_cap.set_yticks([0, 1, 2, 3, 4])
+        ax_cap.set_ylim(0, 5.2)
+        ax_cap.set_yticks([0, 1, 2, 3, 4, 5])
         ax_cap.set_ylabel("Capability Level", fontsize=8, color='#64748B')
         ax_cap.legend(frameon=True, facecolor='#FFFFFF', edgecolor='#E2E8F0', fontsize=8)
         ax_cap.grid(axis='y', linestyle='--', alpha=0.5, color='#E2E8F0')
@@ -1678,7 +2071,7 @@ elif "4. Capability" in menu:
         st.markdown("""
         <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow: 0 4px 14px -2px rgba(15,23,42,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <strong style="color:#0F172A; font-size:0.95rem;"> Capaian Proses Domain Prioritas</strong>
+                <strong style="color:#0F172A; font-size:0.95rem;">🎯 Capaian Persentase 4 Domain Prioritas</strong>
                 <span style="font-size:0.72rem; background:#ECFDF5; color:#065F46; padding:2px 7px; border-radius:4px; font-weight:600;">Persentase (%)</span>
             </div>
         """, unsafe_allow_html=True)
@@ -1691,9 +2084,9 @@ elif "4. Capability" in menu:
         
         if total_pct == 0:
             ax_donut.pie([1], colors=['#E2E8F0'], wedgeprops=dict(width=0.45, edgecolor='#FFFFFF', linewidth=2))
-            ax_donut.text(0, 0, 'Persentase: 0%\n(Geser Slider)', ha='center', va='center', fontsize=8.5, fontweight='bold', color='#64748B')
+            ax_donut.text(0, 0, 'Persentase: 0%\n(Belum Terisi)', ha='center', va='center', fontsize=8.5, fontweight='bold', color='#64748B')
         else:
-            donut_colors = ['#BE123C', '#F59E0B', '#10B981', '#6366F1']
+            donut_colors = ['#EF4444', '#F59E0B', '#10B981', '#6366F1']
             wedges, texts, autotexts = ax_donut.pie(
                 pct_values, 
                 labels=domains_short, 
@@ -1712,7 +2105,7 @@ elif "4. Capability" in menu:
                 at.set_color('#FFFFFF')
                 at.set_fontweight('bold')
                 
-            ax_donut.text(0, 0, 'COBIT 2019\nUNKLAB', ha='center', va='center', fontsize=8.5, fontweight='bold', color='#1E3A8A')
+            ax_donut.text(0, 0, f'UNKLAB\n{avg_inst_pct:.1f}%', ha='center', va='center', fontsize=9, fontweight='bold', color='#1E3A8A')
         fig_donut.tight_layout()
         
         st.pyplot(fig_donut, use_container_width=True)
@@ -1720,25 +2113,35 @@ elif "4. Capability" in menu:
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'> Tabel Evaluasi Kesenjangan (Gap Analysis)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:1.1rem; font-weight:700; color:#0F172A; margin-bottom:10px;'>📊 Tabel Evaluasi Kesenjangan (Gap Analysis)</h3>", unsafe_allow_html=True)
     
-    df_cap_display = pd.DataFrame(cap_list)
-    df_cap_display.columns = ["Domain Evaluasi", "Level As-Is", "Target To-Be", "Gap (Level)", "Pencapaian (%)", "COBIT Rating Scale"]
+    df_cap_display = pd.DataFrame([
+        {
+            "Domain Evaluasi": item['domain'],
+            "Butir Terpenuhi": f"{item['ya']} / {item['total']}",
+            "Pencapaian (%)": f"{item['pct']:.2f}%",
+            "Level As-Is": f"Level {item['as_is']}",
+            "Target To-Be": f"Level {item['to_be']}",
+            "Gap (Level)": f"{item['gap']} Level",
+            "COBIT Rating Scale": item['rating']
+        }
+        for item in cap_list
+    ])
     st.dataframe(df_cap_display, use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     col_btn_db, col_btn_pdf = st.columns(2)
     
     with col_btn_db:
-        if st.button(" Simpan Hasil Evaluasi ke Database SQLite", type="secondary", use_container_width=True):
+        if st.button("💾 Simpan Hasil Evaluasi ke Database SQLite", type="secondary", use_container_width=True):
             for item in cap_list:
                 save_capability_data(item['domain'], item['as_is'], item['to_be'], item['gap'], item['pct'], item['rating'])
-            st.success("Seluruh data assessment kapabilitas berhasil direkam ke database!")
+            st.success("🎉 Seluruh data capability level & gap analysis berhasil disimpan ke database SQLite!")
 
     with col_btn_pdf:
         pdf_buf = generate_pdf_report(eval_name, eval_pos, cap_list)
         st.download_button(
-            label=" Unduh Laporan Resmi Audit COBIT 2019 (PDF)",
+            label="📄 Unduh Laporan Resmi Audit COBIT 2019 (PDF)",
             data=pdf_buf, 
             file_name=f"Laporan_Audit_COBIT2019_UNKLAB_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf", 

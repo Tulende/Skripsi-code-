@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import sqlite3
 from datetime import datetime
 
 # Mengimpor modul dari engine.py
@@ -12,9 +11,9 @@ from engine import (
     calc_fuzzy_5, calc_fuzzy_3, calc_percentage_avg, calc_risk_profile,
     save_individual_answers, get_user_submission_status, get_user_saved_answers,
     get_all_submitted_respondents, aggregate_two_respondents,
-    get_rating_level_cobit, generate_pdf_report, DB_FILE,
+    get_rating_level_cobit, generate_pdf_report,
     load_checklist_questions, save_individual_checklist, get_user_checklist_answers,
-    get_user_checklist_status, get_all_checklist_submitted_respondents,
+    get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection,
     calculate_domain_checklist_score, get_preset_skripsi_capability
 )
 
@@ -1675,7 +1674,7 @@ elif "3. Riwayat" in menu:
     </div>
     """, unsafe_allow_html=True)
     
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     df_resps = pd.read_sql_query("SELECT id, name, position, created_at FROM respondents ORDER BY id DESC", conn)
     df_users = pd.read_sql_query("SELECT id, username, fullname, position, role, created_at FROM users ORDER BY id DESC", conn)
     df_cap_history = pd.read_sql_query("SELECT id, domain_code, as_is_level, to_be_level, gap, achievement_pct, rating_scale, created_at FROM capability_assessments ORDER BY id DESC", conn)
@@ -1717,7 +1716,7 @@ elif "3. Riwayat" in menu:
             st.dataframe(df_cap_history, use_container_width=True)
 
     with tab_db5:
-        conn_chk = sqlite3.connect(DB_FILE)
+        conn_chk = get_connection()
         df_chk_db = pd.read_sql_query("SELECT id, username, fullname, position, domain_code, question_num, answer_val, submitted_at FROM individual_checklist_responses ORDER BY id DESC", conn_chk)
         conn_chk.close()
         if df_chk_db.empty:
@@ -1785,7 +1784,7 @@ elif "4. Capability" in menu:
         # Hitung skor berdasarkan sumber yang dipilih
         if "Konsensus" in sel_chk_source:
             # Ambil jawaban responden1 & responden2
-            conn = sqlite3.connect(DB_FILE)
+            conn = get_connection()
             cur = conn.cursor()
             cur.execute("SELECT id, username FROM users WHERE username IN ('responden1', 'responden2')")
             u_rows = cur.fetchall()
@@ -1820,7 +1819,7 @@ elif "4. Capability" in menu:
         else:
             # Responden spesifik
             target_username = sel_chk_source.split("(")[1].split(")")[0].strip()
-            conn = sqlite3.connect(DB_FILE)
+            conn = get_connection()
             cur = conn.cursor()
             cur.execute("SELECT id FROM users WHERE username = ?", (target_username,))
             r_row = cur.fetchone()
@@ -1851,7 +1850,7 @@ elif "4. Capability" in menu:
                 "as_is": preset_data[d_code]["as_is"]
             }
         # Gunakan jawaban responden1 sebagai referensi bukti
-        conn = sqlite3.connect(DB_FILE)
+        conn = get_connection()
         cur = conn.cursor()
         cur.execute("SELECT id FROM users WHERE username = 'responden1'")
         r_row = cur.fetchone()

@@ -10,14 +10,26 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
-# Simpan database di folder home pengguna agar tidak kena error 'unable to open database file'
-DB_FILE = os.path.join(os.path.expanduser("~"), "cobit2019_unklab.db")
+# Bisa diarahkan ke volume persisten pada server melalui COBIT_DB_PATH.
+# Default tetap di home pengguna agar database lokal berada di luar source code.
+DB_FILE = os.path.abspath(os.path.expanduser(
+    os.environ.get("COBIT_DB_PATH", os.path.join("~", "cobit2019_unklab.db"))
+))
+
+def get_connection():
+    """Buka koneksi SQLite setelah memastikan folder database tersedia."""
+    parent_dir = os.path.dirname(DB_FILE)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+    conn = sqlite3.connect(DB_FILE, timeout=30)
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -195,7 +207,7 @@ def init_db():
     conn.close()
 
 def register_user(username, fullname, position, role, password):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     clean_u = username.strip().lower()
     try:
@@ -211,7 +223,7 @@ def register_user(username, fullname, position, role, password):
         return False, "Username sudah digunakan!"
 
 def authenticate_user(username, password):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     clean_u = username.strip().lower()
     clean_no_space = clean_u.replace(" ", "")
@@ -232,7 +244,7 @@ def authenticate_user(username, password):
     return False, None
 
 def save_respondent_data(name, position, df_results_dict):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO respondents (name, position) VALUES (?, ?)", (name, position))
     respondent_id = cursor.lastrowid
@@ -251,7 +263,7 @@ def save_respondent_data(name, position, df_results_dict):
 
 def load_latest_respondent_data():
     """Memuat data kuesioner DF1-DF10 paling baru dari database SQLite."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM respondents ORDER BY id DESC LIMIT 1")
     row = cursor.fetchone()
@@ -298,7 +310,7 @@ def load_latest_respondent_data():
     return results
 
 def save_capability_data(domain_code, as_is, to_be, gap, pct, rating):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO capability_assessments (domain_code, as_is_level, to_be_level, gap, achievement_pct, rating_scale) VALUES (?, ?, ?, ?, ?, ?)",
@@ -387,7 +399,7 @@ def calc_risk_profile(i_r1, i_r2, l_r1, l_r2):
 
 def save_individual_answers(user_id, username, fullname, position, answers_dict):
     """Menyimpan seluruh jawaban kuesioner dari seorang responden ke database."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     for df_code, items in answers_dict.items():
         for item in items:
@@ -413,7 +425,7 @@ def save_individual_answers(user_id, username, fullname, position, answers_dict)
 
 def get_user_submission_status(user_id):
     """Mengecek apakah responden tertentu sudah menyelesaikan seluruh DF1-DF10."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(DISTINCT df_code), MAX(submitted_at) FROM individual_responses WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
@@ -424,7 +436,7 @@ def get_user_submission_status(user_id):
 
 def get_user_saved_answers(user_id):
     """Mengambil dictionary jawaban individual responden dari database."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT df_code, indicator_name, score_val, impact_val, likelihood_val FROM individual_responses WHERE user_id = ?", (user_id,))
     rows = cursor.fetchall()
@@ -438,7 +450,7 @@ def get_user_saved_answers(user_id):
 
 def get_all_submitted_respondents():
     """Mengambil daftar seluruh responden yang telah mengisi kuesioner."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute('''
         SELECT user_id, username, fullname, position, COUNT(DISTINCT df_code) as df_count, MAX(submitted_at) as last_submit
@@ -478,7 +490,7 @@ def save_individual_checklist(user_id, username, fullname, position, checklist_d
     Menyimpan seluruh jawaban checklist Wawancara 2 (Ya=1, Tidak=0) dari seorang responden ke database.
     checklist_dict: {domain_code: {question_num: int(0 or 1)}}
     """
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     for domain_code, q_map in checklist_dict.items():
         for q_num, ans_val in q_map.items():
@@ -498,7 +510,7 @@ def save_individual_checklist(user_id, username, fullname, position, checklist_d
 
 def get_user_checklist_answers(user_id):
     """Mengambil dictionary jawaban checklist Wawancara 2 dari seorang responden."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT domain_code, question_num, answer_val FROM individual_checklist_responses WHERE user_id = ?", (user_id,))
     rows = cursor.fetchall()
@@ -512,7 +524,7 @@ def get_user_checklist_answers(user_id):
 
 def get_user_checklist_status(user_id):
     """Mengecek apakah responden telah menyelesaikan checklist Wawancara 2 (124 butir)."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*), MAX(submitted_at) FROM individual_checklist_responses WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
@@ -523,7 +535,7 @@ def get_user_checklist_status(user_id):
 
 def get_all_checklist_submitted_respondents():
     """Mengambil daftar seluruh responden yang telah mengisi checklist Wawancara 2."""
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute('''
         SELECT user_id, username, fullname, position, COUNT(*) as q_count, MAX(submitted_at) as last_submit

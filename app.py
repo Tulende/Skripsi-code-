@@ -13,7 +13,8 @@ from engine import (
     get_all_submitted_respondents, aggregate_two_respondents,
     get_rating_level_cobit, generate_pdf_report,
     load_checklist_questions, save_individual_checklist, get_user_checklist_answers,
-    get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection,
+    get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection, read_dataframe,
+    is_postgres_configured, get_sqlite_backup,
     calculate_domain_checklist_score, get_preset_skripsi_capability
 )
 
@@ -29,6 +30,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
+
+if not is_postgres_configured():
+    st.warning(
+        "Database belum dipindahkan ke PostgreSQL. Data saat ini masih memakai SQLite lokal "
+        "dan dapat hilang saat aplikasi Streamlit di-redeploy. Unduh backup dari menu "
+        "Riwayat sebelum mengaktifkan PostgreSQL."
+    )
 
 # ==========================================
 # ENTERPRISE & RESPONSIVE DESIGN SYSTEM (MOBILE-READY)
@@ -572,7 +580,7 @@ st.sidebar.markdown(f"""
     <div style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 0.72rem; color: #93C5FD; display: flex; align-items: center; justify-content: space-between;">
         <span style="display: flex; align-items: center; gap: 6px;">
             <span style="display:inline-block; width:7px; height:7px; background:#10B981; border-radius:50%; box-shadow: 0 0 8px #10B981;"></span>
-            Sesi Aktif di SQLite
+            Sesi Aktif di PostgreSQL
         </span>
         <span style="opacity: 0.7; font-size: 0.68rem; font-weight: 600;">COBIT 2019</span>
     </div>
@@ -1209,7 +1217,7 @@ elif "1. Pengolahan" in menu:
         st.markdown("<br>", unsafe_allow_html=True)
         col_save, col_info_box = st.columns([1.2, 2])
         with col_save:
-            if st.button("Simpan Penilaian ke Database SQLite", type="primary", use_container_width=True):
+            if st.button("Simpan Penilaian ke Database PostgreSQL", type="primary", use_container_width=True):
                 st.session_state.calculated_results = temp_results
                 incomplete_dfs = [
                     code for code, r_list in temp_results.items()
@@ -1666,18 +1674,30 @@ elif "3. Riwayat" in menu:
     if not is_admin:
         st.error(" Akses Terbatas: Modul ini dikhususkan bagi Administrator.")
         st.stop()
+
+    if not is_postgres_configured():
+        sqlite_backup = get_sqlite_backup()
+        if sqlite_backup:
+            st.download_button(
+                "Unduh backup database SQLite sebelum migrasi",
+                data=sqlite_backup,
+                file_name="cobit2019_unklab_backup.db",
+                mime="application/vnd.sqlite3",
+                type="primary",
+            )
         
     st.markdown("""
     <div style="margin-bottom:16px;">
-        <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">Penyimpanan & Riwayat Data Audit (SQLite)</h2>
+        <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">Penyimpanan & Riwayat Data Audit (PostgreSQL)</h2>
         <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Pemeriksaan riwayat responden kuesioner dan data akun auditor terdaftar</p>
     </div>
     """, unsafe_allow_html=True)
     
     conn = get_connection()
-    df_resps = pd.read_sql_query("SELECT id, name, position, created_at FROM respondents ORDER BY id DESC", conn)
-    df_users = pd.read_sql_query("SELECT id, username, fullname, position, role, created_at FROM users ORDER BY id DESC", conn)
-    df_cap_history = pd.read_sql_query("SELECT id, domain_code, as_is_level, to_be_level, gap, achievement_pct, rating_scale, created_at FROM capability_assessments ORDER BY id DESC", conn)
+    df_resps = read_dataframe(conn, "SELECT id, name, position, created_at FROM respondents ORDER BY id DESC")
+    df_users = read_dataframe(conn, "SELECT id, username, fullname, position, role, created_at FROM users ORDER BY id DESC")
+    df_cap_history = read_dataframe(conn, "SELECT id, domain_code, as_is_level, to_be_level, gap, achievement_pct, rating_scale, created_at FROM capability_assessments ORDER BY id DESC")
+    df_indiv = read_dataframe(conn, "SELECT id, username, fullname, position, df_code, indicator_name, score_val, impact_val, likelihood_val, submitted_at FROM individual_responses ORDER BY id DESC")
     conn.close()
     
     tab_db1, tab_db2, tab_db3, tab_db4, tab_db5 = st.tabs([
@@ -1689,7 +1709,6 @@ elif "3. Riwayat" in menu:
     ])
     
     with tab_db1:
-        df_indiv = pd.read_sql_query("SELECT id, username, fullname, position, df_code, indicator_name, score_val, impact_val, likelihood_val, submitted_at FROM individual_responses ORDER BY id DESC", conn)
         if df_indiv.empty:
             st.info("Belum ada jawaban individual responden di database.")
         else:
@@ -1717,7 +1736,7 @@ elif "3. Riwayat" in menu:
 
     with tab_db5:
         conn_chk = get_connection()
-        df_chk_db = pd.read_sql_query("SELECT id, username, fullname, position, domain_code, question_num, answer_val, submitted_at FROM individual_checklist_responses ORDER BY id DESC", conn_chk)
+        df_chk_db = read_dataframe(conn_chk, "SELECT id, username, fullname, position, domain_code, question_num, answer_val, submitted_at FROM individual_checklist_responses ORDER BY id DESC")
         conn_chk.close()
         if df_chk_db.empty:
             st.info("Belum ada data jawaban checklist Wawancara 2 di database.")
@@ -1821,7 +1840,7 @@ elif "4. Capability" in menu:
             target_username = sel_chk_source.split("(")[1].split(")")[0].strip()
             conn = get_connection()
             cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE username = ?", (target_username,))
+            cur.execute("SELECT id FROM users WHERE username = %s", (target_username,))
             r_row = cur.fetchone()
             conn.close()
             
@@ -2132,10 +2151,10 @@ elif "4. Capability" in menu:
     col_btn_db, col_btn_pdf = st.columns(2)
     
     with col_btn_db:
-        if st.button("💾 Simpan Hasil Evaluasi ke Database SQLite", type="secondary", use_container_width=True):
+        if st.button("💾 Simpan Hasil Evaluasi ke Database PostgreSQL", type="secondary", use_container_width=True):
             for item in cap_list:
                 save_capability_data(item['domain'], item['as_is'], item['to_be'], item['gap'], item['pct'], item['rating'])
-            st.success("🎉 Seluruh data capability level & gap analysis berhasil disimpan ke database SQLite!")
+            st.success("🎉 Seluruh data capability level & gap analysis berhasil disimpan ke database PostgreSQL!")
 
     with col_btn_pdf:
         pdf_buf = generate_pdf_report(eval_name, eval_pos, cap_list)

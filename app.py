@@ -1851,15 +1851,10 @@ elif "4. Capability" in menu:
 
     if "Integrasi Otomatis" in cap_mode:
         all_chk_resps = get_all_checklist_submitted_respondents()
-        col_src1, col_src2 = st.columns([1.5, 2])
-        with col_src1:
-            resp_options = ["Konsensus Gabungan (Rata-rata Responden)"]
-            if all_chk_resps:
-                resp_options += [f"{r['fullname']} ({r['username']}) - {r['q_count']} butir" for r in all_chk_resps]
-            sel_chk_source = st.selectbox("Pilih Sumber Jawaban Responden:", resp_options)
-
-        with col_src2:
-            st.info(" **Metode Wawancara 2:** Menggunakan rasio biner murni tanpa Fuzzy Logic: $\\text{Pencapaian (\\%)} = \\frac{\\sum \\text{Ya}}{\\text{Total Pertanyaan}} \\times 100\\%$.")
+        resp_options = ["Konsensus Gabungan (Rata-rata Responden)"]
+        if all_chk_resps:
+            resp_options += [f"{r['fullname']} ({r['username']}) - {r['q_count']} butir" for r in all_chk_resps]
+        sel_chk_source = st.selectbox("Pilih Sumber Jawaban Responden:", resp_options)
 
         # Hitung skor berdasarkan sumber yang dipilih
         if "Konsensus" in sel_chk_source:

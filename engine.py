@@ -116,6 +116,14 @@ def read_dataframe(connection, query):
     columns = [column.name if hasattr(column, "name") else column[0] for column in cursor.description]
     return pd.DataFrame(cursor.fetchall(), columns=columns)
 
+def format_db_timestamp(value, fallback=""):
+    """Format timestamp dari SQLite (teks) atau PostgreSQL (datetime)."""
+    if value is None or value == "":
+        return fallback
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d %H:%M")
+    return str(value)[:16]
+
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 

@@ -14,7 +14,7 @@ from engine import (
     get_rating_level_cobit, generate_pdf_report,
     load_checklist_questions, save_individual_checklist, get_user_checklist_answers,
     get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection, read_dataframe,
-    is_postgres_configured, get_sqlite_backup,
+    is_postgres_configured, get_sqlite_backup, format_db_timestamp,
     calculate_domain_checklist_score, get_preset_skripsi_capability
 )
 
@@ -611,7 +611,7 @@ else:
     if is_sub_status:
         st.sidebar.markdown(f"""
         <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:9px 12px; margin-top:8px; font-size:0.75rem; color:#15803D;">
-            <b>✓ Wawancara 1 (DF1–DF10):</b><br>Sudah Diserahkan ({sub_time[:16] if sub_time else ''})
+            <b>✓ Wawancara 1 (DF1–DF10):</b><br>Sudah Diserahkan ({format_db_timestamp(sub_time)})
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -624,7 +624,7 @@ else:
     if is_chk_status:
         st.sidebar.markdown(f"""
         <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:9px 12px; margin-top:6px; font-size:0.75rem; color:#15803D;">
-            <b>✓ Wawancara 2 (Checklist):</b><br>Lengkap (124/124 Butir) ({chk_time[:16] if chk_time else ''})
+            <b>✓ Wawancara 2 (Checklist):</b><br>Lengkap (124/124 Butir) ({format_db_timestamp(chk_time)})
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -690,7 +690,7 @@ if not is_admin:
         
         is_sub_status, sub_time = get_user_submission_status(user_p['id'])
         if is_sub_status:
-            st.success(f"✅ **Kuesioner Terkirim:** Jawaban Wawancara 1 Anda telah berhasil disimpan dan diserahkan ke Tim Administrator pada **{sub_time[:16] if sub_time else ''}**.")
+            st.success(f"✅ **Kuesioner Terkirim:** Jawaban Wawancara 1 Anda telah berhasil disimpan dan diserahkan ke Tim Administrator pada **{format_db_timestamp(sub_time)}**.")
             st.info("🔒 **Hak Akses Terbatas:** Seluruh hasil pengolahan agregat Fuzzy TFN, pemetaan Design Factor Map (Canvas), dan laporan Capability Level diproses secara terpusat dan hanya dapat dilihat serta diolah oleh Administrator.")
         else:
             st.info(f"Halo, **{user_p['fullname']}** ({user_p['position']})! Silakan isi seluruh indikator pada tab **DF1 sampai DF10** berikut sesuai observasi dan kondisi riil di unit kerja Anda. Setelah selesai, klik tombol **'Kirim Jawaban Kuesioner ke Administrator'**.")
@@ -844,7 +844,7 @@ if not is_admin:
         
         is_chk_status, chk_count, chk_time = get_user_checklist_status(user_p['id'])
         if is_chk_status:
-            st.success(f"✅ **Checklist Wawancara 2 Lengkap:** Anda telah menjawab seluruh 124 butir pertanyaan checklist (Terakhir disimpan: **{chk_time[:16] if chk_time else ''}**). Anda dapat meninjau atau memperbarui jawaban di bawah ini.")
+            st.success(f"✅ **Checklist Wawancara 2 Lengkap:** Anda telah menjawab seluruh 124 butir pertanyaan checklist (Terakhir disimpan: **{format_db_timestamp(chk_time)}**). Anda dapat meninjau atau memperbarui jawaban di bawah ini.")
             st.info("🔒 **Hak Akses Terbatas:** Data jawaban checklist Anda akan diolah secara terpusat oleh Administrator untuk menghitung persentase Capability Level institusi.")
         else:
             st.info(f"Halo, **{user_p['fullname']}** ({user_p['position']})! Wawancara Tahap II ini mengonfirmasi keterpenuhan praktik pada 4 Domain Prioritas. Silakan jawab setiap butir dengan pilihan **Ya** (sudah diterapkan) atau **Tidak** (belum diterapkan). Terisi saat ini: **{chk_count}/124 butir**.")
@@ -996,7 +996,7 @@ elif "1. Pengolahan" in menu:
                     "Nama Responden": r["fullname"],
                     "Jabatan / Unit": r["position"],
                     "Cakupan DF": f"{r['df_count']} / 10 DF",
-                    "Waktu Pengisian": r["submitted_at"][:16] if r["submitted_at"] else "-"
+                    "Waktu Pengisian": format_db_timestamp(r["submitted_at"], fallback="-")
                 }
                 for r in submitted_list
             ])

@@ -15,7 +15,7 @@ from engine import (
     load_checklist_questions, save_individual_checklist, get_user_checklist_answers,
     get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection, read_dataframe,
     is_postgres_configured, get_sqlite_backup, format_db_timestamp,
-    calculate_domain_checklist_score, get_preset_skripsi_capability
+    calculate_domain_checklist_score
 )
 
 # Inisialisasi Database
@@ -1836,19 +1836,11 @@ elif "4. Capability" in menu:
     st.markdown("""
     <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:16px 18px; margin-bottom:16px;">
         <h3 style="margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0F172A;"> Sumber Data Penilaian Kapabilitas (Capability Level)</h3>
-        <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Pilih metode penentuan persentase pencapaian proses dari Wawancara 2 (Checklist Biner) atau preset data skripsi</p>
+        <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Persentase pencapaian proses dihitung dari jawaban Wawancara 2 (Checklist Biner).</p>
     """, unsafe_allow_html=True)
     
-    cap_mode = st.radio(
-        "Metode Penentuan Nilai Kapabilitas:",
-        [
-            " Integrasi Otomatis dari Checklist Wawancara 2 (Data Responden)",
-            " Preset Data Aktual Skripsi UNKLAB (Novanca Tulende)",
-            " Simulasi Manual (Slider Bebas)"
-        ],
-        index=0,
-        label_visibility="collapsed"
-    )
+    st.info("Penilaian Capability Level dihitung otomatis dari jawaban Checklist Wawancara 2 yang tersimpan.")
+    cap_mode = "Integrasi Otomatis dari Checklist Wawancara 2 (Data Responden)"
     
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1926,48 +1918,6 @@ elif "4. Capability" in menu:
                     "rating": calc_res["rating"],
                     "as_is": calc_res["as_is_lvl"]
                 }
-
-    elif "Preset Data Aktual" in cap_mode:
-        preset_data = get_preset_skripsi_capability()
-        for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
-            domain_scores[d_code] = {
-                "ya": preset_data[d_code]["ya"],
-                "total": preset_data[d_code]["total"],
-                "pct": preset_data[d_code]["pct"],
-                "rating": preset_data[d_code]["rating"],
-                "as_is": preset_data[d_code]["as_is"]
-            }
-        # Gunakan jawaban responden1 sebagai referensi bukti
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id FROM users WHERE username = 'responden1'")
-        r_row = cur.fetchone()
-        conn.close()
-        selected_evidence_answers = get_user_checklist_answers(r_row[0]) if r_row else {}
-
-    else: # Simulasi Manual Slider
-        st.markdown("""
-        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
-            <span style="font-size:0.83rem; color:#475569;">Sesuaikan persentase capaian pemenuhan proses secara manual di bawah ini:</span>
-        </div>
-        """, unsafe_allow_html=True)
-        col_s1, col_s2 = st.columns(2)
-        with col_s1:
-            p_apo12 = st.slider("1. APO12 — Managed Risk (%)", 0.0, 100.0, 8.0, step=0.5)
-            p_apo13 = st.slider("2. APO13 — Managed Security (%)", 0.0, 100.0, 42.0, step=0.5)
-        with col_s2:
-            p_dss05 = st.slider("3. DSS05 — Security Services (%)", 0.0, 100.0, 75.0, step=0.5)
-            p_mea03 = st.slider("4. MEA03 — Managed Compliance (%)", 0.0, 100.0, 31.0, step=0.5)
-
-        for d_code, p_val, tot_val in [("APO12", p_apo12, 36), ("APO13", p_apo13, 19), ("DSS05", p_dss05, 49), ("MEA03", p_mea03, 20)]:
-            r_str, as_is_val = get_rating_level_cobit(p_val)
-            domain_scores[d_code] = {
-                "ya": int(round((p_val / 100.0) * tot_val)),
-                "total": tot_val,
-                "pct": p_val,
-                "rating": r_str,
-                "as_is": as_is_val
-            }
 
     # Pilihan Target Level To-Be
     col_tgt1, col_tgt2 = st.columns([1.2, 2.8])

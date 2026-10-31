@@ -6,7 +6,7 @@ import sys
 
 import psycopg
 
-from engine import init_db
+from engine import get_database_url, init_db
 
 
 TABLES = (
@@ -20,7 +20,7 @@ TABLES = (
 
 
 def main(source_path):
-    database_url = os.environ.get("DATABASE_URL")
+    database_url = os.environ.get("DATABASE_URL") or get_database_url()
     if not database_url:
         raise SystemExit("Set DATABASE_URL to the target PostgreSQL connection string first.")
     if not os.path.isfile(source_path):

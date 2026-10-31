@@ -2,6 +2,8 @@ import hashlib
 import io
 import os
 import sqlite3
+import tomllib
+from pathlib import Path
 import streamlit as st
 import psycopg
 import pandas as pd
@@ -61,6 +63,27 @@ def get_database_url():
             database_url = st.secrets["postgresql"]["url"]
         except Exception:
             database_url = None
+    if not database_url:
+        for secrets_path in (
+            Path(__file__).parent / ".streamlit" / "secrets.toml",
+            Path.home() / ".streamlit" / "secrets.toml",
+        ):
+            try:
+                with secrets_path.open("rb") as secrets_file:
+                    database_url = tomllib.load(secrets_file).get("postgresql", {}).get("url")
+                if database_url:
+                    break
+            except (OSError, tomllib.TOMLDecodeError):
+                continue
+    if database_url and "://" not in database_url and "@" in database_url:
+        database_url = "postgresql://" + database_url
+    if database_url and "@" in database_url:
+        scheme, remainder = database_url.split("://", 1)
+        credentials, host_path = remainder.split("@", 1)
+        username, separator, password = credentials.partition(":")
+        if separator:
+            password = password.replace("[", "%5B").replace("]", "%5D")
+            database_url = f"{scheme}://{username}:{password}@{host_path}"
     return database_url
 
 def is_postgres_configured():

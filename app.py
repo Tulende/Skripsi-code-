@@ -12,7 +12,7 @@ from engine import (
     save_individual_answers, get_user_submission_status, get_user_saved_answers,
     get_all_submitted_respondents, aggregate_two_respondents,
     get_rating_level_cobit, generate_pdf_report,
-    load_checklist_questions, save_individual_checklist, get_user_checklist_answers,
+    get_checklist_level_questions, save_individual_checklist, get_user_checklist_answers,
     get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection, read_dataframe,
     is_postgres_configured, get_sqlite_backup, format_db_timestamp,
     calculate_domain_checklist_score
@@ -20,6 +20,8 @@ from engine import (
 
 # Inisialisasi Database
 init_db()
+checklist_level2_questions = get_checklist_level_questions(2)
+checklist_level2_total = sum(len(questions) for questions in checklist_level2_questions.values())
 
 # ==========================================
 # PAGE CONFIGURATION & METADATA
@@ -694,13 +696,13 @@ else:
     if is_chk_status:
         st.sidebar.markdown(f"""
         <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:9px 12px; margin-top:6px; font-size:0.75rem; color:#15803D;">
-            <b> Wawancara 2 (Checklist):</b><br>Lengkap (124/124 Butir) ({format_db_timestamp(chk_time)})
+            <b> Wawancara 2 (Checklist):</b><br>Lengkap Level 2 ({chk_count}/{checklist_level2_total} Butir) ({format_db_timestamp(chk_time)})
         </div>
         """, unsafe_allow_html=True)
     else:
         st.sidebar.markdown(f"""
         <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:9px 12px; margin-top:6px; font-size:0.75rem; color:#1E40AF;">
-            <b> Wawancara 2 (Checklist):</b><br>Terisi {chk_count}/124 Butir
+            <b> Wawancara 2 (Checklist):</b><br>Level 2 terisi {chk_count}/{checklist_level2_total} Butir
         </div>
         """, unsafe_allow_html=True)
 
@@ -911,14 +913,15 @@ if not is_admin:
         </div>
         """, unsafe_allow_html=True)
         
+        checklist_data = checklist_level2_questions
+        checklist_total = checklist_level2_total
         is_chk_status, chk_count, chk_time = get_user_checklist_status(user_p['id'])
         if is_chk_status:
-            st.success(f" **Checklist Wawancara 2 Lengkap:** Anda telah menjawab seluruh 124 butir pertanyaan checklist (Terakhir disimpan: **{format_db_timestamp(chk_time)}**). Anda dapat meninjau atau memperbarui jawaban di bawah ini.")
+            st.success(f" **Checklist Wawancara 2 Level 2 Lengkap:** Anda telah menjawab seluruh {checklist_total} butir Level 2 (Terakhir disimpan: **{format_db_timestamp(chk_time)}**). Anda dapat meninjau atau memperbarui jawaban di bawah ini.")
             st.info(" **Hak Akses Terbatas:** Data jawaban checklist Anda akan diolah secara terpusat oleh Administrator untuk menghitung persentase Capability Level institusi.")
         else:
-            st.info(f"Halo, **{user_p['fullname']}** ({user_p['position']})! Wawancara Tahap II ini mengonfirmasi keterpenuhan praktik pada 4 Domain Prioritas. Silakan jawab setiap butir dengan pilihan **Ya** (sudah diterapkan) atau **Tidak** (belum diterapkan). Terisi saat ini: **{chk_count}/124 butir**.")
+            st.info(f"Halo, **{user_p['fullname']}** ({user_p['position']})! Silakan isi pertanyaan **Capability Level 2 — Managed** pada setiap domain. Pertanyaan Level 3–5 tidak ditampilkan karena penilaian saat ini dibatasi sampai Level 2. Pilih **Ya** atau **Tidak** untuk setiap butir. Terisi saat ini: **{chk_count}/{checklist_total} butir Level 2**.")
 
-        checklist_data = load_checklist_questions()
         saved_chk_answers = get_user_checklist_answers(user_p['id'])
         
         dom_keys = ["APO12", "APO13", "DSS05", "MEA03"]
@@ -930,10 +933,10 @@ if not is_admin:
         ]
         tabs_chk = st.tabs(domain_tabs_labels)
         dom_titles = {
-            "APO12": ("APO12 — Managed Risk", "Manajemen Risiko TI Institusi (36 Butir Pertanyaan Validasi)"),
-            "APO13": ("APO13 — Managed Security", "Sistem Manajemen Keamanan Informasi (19 Butir Pertanyaan Validasi)"),
-            "DSS05": ("DSS05 — Managed Security Services", "Operasional Layanan Keamanan & Akses Data (49 Butir Pertanyaan Validasi)"),
-            "MEA03": ("MEA03 — Managed Compliance", "Kepatuhan terhadap Regulasi Eksternal & Internal (20 Butir Pertanyaan Validasi)")
+            "APO12": ("APO12 — Managed Risk", "Pertanyaan Level 2: pengelolaan risiko TI."),
+            "APO13": ("APO13 — Managed Security", "Pertanyaan Level 2: pengelolaan keamanan informasi."),
+            "DSS05": ("DSS05 — Managed Security Services", "Pertanyaan Level 2: layanan keamanan dan akses data."),
+            "MEA03": ("MEA03 — Managed Compliance", "Pertanyaan Level 2: kepatuhan terhadap persyaratan eksternal.")
         }
         
         for idx, d_code in enumerate(dom_keys):
@@ -957,10 +960,11 @@ if not is_admin:
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+                st.markdown("#### Capability Level 2 — Managed")
                 
                 for q in q_list:
                     q_num = q['num']
-                    saved_val = d_saved.get(q_num, 0)
+                    saved_val = d_saved.get(q_num)
                     
                     st.markdown(f"""
                     <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
@@ -982,7 +986,7 @@ if not is_admin:
                         st.radio(
                             f"Jawaban Butir {d_code} #{q_num}",
                             options=["Ya (Terpenuhi / Diterapkan)", "Tidak (Belum Terpenuhi)"],
-                            index=(0 if saved_val == 1 else 1),
+                            index=(0 if saved_val == 1 else 1 if saved_val == 0 else None),
                             key=f"u_chk_{d_code}_{q_num}",
                             horizontal=True,
                             label_visibility="collapsed"
@@ -994,16 +998,23 @@ if not is_admin:
         with col_cbtn:
             if st.button(" Kirim Jawaban Checklist ke Administrator", type="primary", use_container_width=True):
                 collected_chk = {}
+                unanswered = []
                 for d_code, q_list in checklist_data.items():
                     collected_chk[d_code] = {}
                     for q in q_list:
-                        ans_str = st.session_state.get(f"u_chk_{d_code}_{q['num']}", "Tidak")
-                        collected_chk[d_code][q['num']] = 1 if "Ya" in ans_str else 0
-                
-                save_individual_checklist(user_p['id'], user_p['username'], user_p['fullname'], user_p['position'], collected_chk)
-                st.success(" Terima kasih! Seluruh jawaban Checklist Wawancara 2 (124 butir) berhasil disimpan dan diserahkan ke Tim Administrator.")
-                st.balloons()
-                st.rerun()
+                        ans_str = st.session_state.get(f"u_chk_{d_code}_{q['num']}")
+                        if ans_str is None:
+                            unanswered.append(f"{d_code} #{q['num']}")
+                        else:
+                            collected_chk[d_code][q['num']] = 1 if "Ya" in ans_str else 0
+
+                if unanswered:
+                    st.warning(f"Masih ada {len(unanswered)} butir yang belum dijawab. Pilih Ya atau Tidak sebelum mengirim.")
+                else:
+                    save_individual_checklist(user_p['id'], user_p['username'], user_p['fullname'], user_p['position'], collected_chk)
+                    st.success(f"Terima kasih! Seluruh {checklist_total} jawaban Level 2 berhasil disimpan dan diserahkan ke Administrator.")
+                    st.balloons()
+                    st.rerun()
         with col_cinfo:
             st.info(" **Hak Akses:** Data checklist tersimpan aman di database dan hanya dapat diolah serta dipublikasikan oleh Administrator.")
 
@@ -1839,14 +1850,13 @@ elif "4. Capability" in menu:
         <p style="margin:0 0 12px 0; font-size:0.82rem; color:#64748B;">Persentase pencapaian proses dihitung dari jawaban Wawancara 2 (Checklist Biner).</p>
     """, unsafe_allow_html=True)
     
-    st.info("Penilaian Capability Level dihitung otomatis dari jawaban Checklist Wawancara 2 yang tersimpan.")
+    st.info("Penilaian Capability Level dihitung otomatis dari jawaban checklist Level 2 yang tersimpan.")
     cap_mode = "Integrasi Otomatis dari Checklist Wawancara 2 (Data Responden)"
     
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Inisialisasi dictionary hasil capaian 4 domain
     domain_scores = {}
-    checklist_full_questions = load_checklist_questions()
     selected_evidence_answers = {}
 
     if "Integrasi Otomatis" in cap_mode:
@@ -1869,7 +1879,7 @@ elif "4. Capability" in menu:
             selected_evidence_answers = all_u_answers[0] if all_u_answers else {}
             
             for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
-                q_list = checklist_full_questions.get(d_code, [])
+                q_list = checklist_level2_questions.get(d_code, [])
                 total_q = len(q_list)
                 if total_q == 0:
                     domain_scores[d_code] = {"ya": 0, "total": 0, "pct": 0.0, "rating": "N - Not Achieved (0-14%)", "as_is": 0}
@@ -1905,7 +1915,7 @@ elif "4. Capability" in menu:
             selected_evidence_answers = user_chk_ans
             
             for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
-                calc_res = calculate_domain_checklist_score(d_code, user_chk_ans, checklist_full_questions)
+                calc_res = calculate_domain_checklist_score(d_code, user_chk_ans, checklist_level2_questions)
                 domain_scores[d_code] = {
                     "ya": calc_res["ya"],
                     "total": calc_res["total"],
@@ -2001,12 +2011,12 @@ elif "4. Capability" in menu:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ========================================================
-    # AUDIT TRAIL / EVIDENCE EXPLORER (124 BUTIR CHECKLIST)
+    # AUDIT TRAIL / EVIDENCE EXPLORER (PERTANYAAN LEVEL 2)
     # ========================================================
-    with st.expander(" Audit Trail & Tinjauan Bukti: 124 Butir Checklist Wawancara 2", expanded=False):
+    with st.expander(f" Audit Trail & Tinjauan Bukti: {checklist_level2_total} Pertanyaan Level 2", expanded=False):
         st.markdown("""
         <p style="font-size:0.83rem; color:#64748B; margin-bottom:12px;">
-            Daftar lengkap 124 butir checklist dari 4 domain prioritas UNKLAB berdasarkan dokumen wawancara resmi.
+            Daftar jawaban untuk pertanyaan Capability Level 2 dari empat domain prioritas UNKLAB.
         </p>
         """, unsafe_allow_html=True)
         
@@ -2020,7 +2030,7 @@ elif "4. Capability" in menu:
         for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
             if flt_dom != "Semua Domain" and flt_dom != d_code:
                 continue
-            q_list = checklist_full_questions.get(d_code, [])
+            q_list = checklist_level2_questions.get(d_code, [])
             d_ans = selected_evidence_answers.get(d_code, {})
             for q in q_list:
                 ans_val = d_ans.get(q['num'], 0)

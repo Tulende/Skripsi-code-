@@ -516,6 +516,13 @@ def get_all_submitted_respondents():
 # WAWANCARA 2: CHECKLIST CAPABILITY LEVEL (BINER YA / TIDAK)
 # ========================================================
 
+CHECKLIST_LEVEL_RANGES = {
+    "APO12": {2: (1, 6), 3: (7, 24), 4: (25, 34), 5: (35, 36)},
+    "APO13": {2: (1, 7), 3: (8, 13), 4: (14, 18), 5: (19, 19)},
+    "DSS05": {2: (1, 26), 3: (27, 44), 4: (45, 49)},
+    "MEA03": {2: (1, 8), 3: (9, 17), 4: (18, 19), 5: (20, 20)},
+}
+
 def load_checklist_questions():
     """Memuat daftar 124 butir checklist dari file parsed_checklist.json."""
     import json
@@ -524,6 +531,24 @@ def load_checklist_questions():
         with open(json_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     return {}
+
+def get_checklist_level_questions(level, all_questions_dict=None):
+    """Filter pertanyaan checklist berdasarkan rentang nomor capability level pada instrumen."""
+    if all_questions_dict is None:
+        all_questions_dict = load_checklist_questions()
+
+    level_questions = {}
+    for domain_code, questions in all_questions_dict.items():
+        start_end = CHECKLIST_LEVEL_RANGES.get(domain_code, {}).get(level)
+        if not start_end:
+            level_questions[domain_code] = []
+            continue
+        start_num, end_num = start_end
+        level_questions[domain_code] = [
+            question for question in questions
+            if start_num <= int(question["num"]) <= end_num
+        ]
+    return level_questions
 
 def save_individual_checklist(user_id, username, fullname, position, checklist_dict):
     """
@@ -563,15 +588,30 @@ def get_user_checklist_answers(user_id):
     return res
 
 def get_user_checklist_status(user_id):
-    """Mengecek apakah responden telah menyelesaikan checklist Wawancara 2 (124 butir)."""
+    """Mengecek kelengkapan seluruh pertanyaan Level 2 pada checklist Wawancara 2."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*), MAX(submitted_at) FROM individual_checklist_responses WHERE user_id = %s", (user_id,))
-    row = cursor.fetchone()
+    cursor.execute(
+        "SELECT domain_code, question_num, submitted_at FROM individual_checklist_responses WHERE user_id = %s",
+        (user_id,)
+    )
+    rows = cursor.fetchall()
     conn.close()
-    count = row[0] if row else 0
-    max_time = row[1] if row else None
-    return (count >= 124), count, max_time
+
+    questions_by_domain = get_checklist_level_questions(2)
+    expected = {
+        (domain_code, int(question["num"]))
+        for domain_code, questions in questions_by_domain.items()
+        for question in questions
+    }
+    answered = {(domain_code, int(question_num)) for domain_code, question_num, _ in rows}
+    count = len(expected & answered)
+    submitted_times = [
+        submitted_at for domain_code, question_num, submitted_at in rows
+        if (domain_code, int(question_num)) in expected and submitted_at is not None
+    ]
+    max_time = max(submitted_times) if submitted_times else None
+    return bool(expected) and expected.issubset(answered), count, max_time
 
 def get_all_checklist_submitted_respondents():
     """Mengambil daftar seluruh responden yang telah mengisi checklist Wawancara 2."""

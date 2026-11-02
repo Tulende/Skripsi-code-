@@ -766,10 +766,21 @@ def aggregate_two_respondents(user_id_1, user_id_2, df_definitions):
 
 
 def get_rating_level_cobit(pct):
-    if pct < 15: return "N - Not Achieved (0-14%)", 0
-    elif pct < 50: return "P - Partially Achieved (15-49%)", 1
-    elif pct < 85: return "L - Largely Achieved (50-84%)", 2
-    else: return "F - Fully Achieved (85-100%)", 3
+    """Return rating scale and attained level for the evaluated Level 2 checklist.
+
+    A domain reaches capability Level 2 only when Level 2 is Fully Achieved.
+    Any lower rating means the assessed capability remains at Level 1.
+    """
+    if pct < 15:
+        rating = "N - Not Achieved (0-14%)"
+    elif pct < 50:
+        rating = "P - Partially Achieved (15-49%)"
+    elif pct < 85:
+        rating = "L - Largely Achieved (50-84%)"
+    else:
+        rating = "F - Fully Achieved (85-100%)"
+    attained_level = 2 if pct >= 85 else 1
+    return rating, attained_level
 
 def generate_pdf_report(evaluator_name, evaluator_pos, capability_data_list):
     buffer = io.BytesIO()

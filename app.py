@@ -1879,9 +1879,10 @@ elif "4. Capability" in menu:
             resp_options.append(option)
             respondent_ids_by_option[option] = respondent["user_id"]
         sel_chk_source = st.selectbox("Pilih Sumber Jawaban Responden:", resp_options)
+        consensus_selected = "Konsensus" in sel_chk_source
 
         # Hitung skor berdasarkan sumber yang dipilih
-        if "Konsensus" in sel_chk_source:
+        if consensus_selected:
             # Gunakan seluruh responden yang checklist Level 2-nya lengkap.
             all_u_answers = [
                 get_user_checklist_answers(respondent["user_id"])
@@ -1893,20 +1894,22 @@ elif "4. Capability" in menu:
                 q_list = checklist_level2_questions.get(d_code, [])
                 total_q = len(q_list)
                 if total_q == 0:
-                    domain_scores[d_code] = {"ya": 0, "total": 0, "pct": 0.0, "rating": "N - Not Achieved (0-14%)", "as_is": 0}
+                    domain_scores[d_code] = {"ya": 0.0, "total": 0, "pct": 0.0, "rating": "N - Not Achieved (0-14%)", "as_is": 1}
                     continue
                 
                 # Rata-rata persentase antar responden
                 pct_sum = 0.0
+                ya_sum = 0
                 for u_ans in all_u_answers:
                     d_ans = u_ans.get(d_code, {})
                     ya_c = sum(1 for q in q_list if d_ans.get(q['num']) == 1)
+                    ya_sum += ya_c
                     pct_sum += (ya_c / total_q) * 100.0
                 
                 avg_pct = round(pct_sum / len(all_u_answers), 2) if all_u_answers else 0.0
                 rating_str, as_is_val = get_rating_level_cobit(avg_pct)
                 domain_scores[d_code] = {
-                    "ya": int(round((avg_pct / 100.0) * total_q)),
+                    "ya": round(ya_sum / len(all_u_answers), 2) if all_u_answers else 0.0,
                     "total": total_q,
                     "pct": avg_pct,
                     "rating": rating_str,
@@ -1968,6 +1971,11 @@ elif "4. Capability" in menu:
     avg_inst_pct = round(sum(item['pct'] for item in cap_list) / 4.0, 2)
     avg_inst_as_is = int(round(sum(item['as_is'] for item in cap_list) / 4.0))
     avg_inst_gap = max(0, target_lvl - avg_inst_as_is)
+    yes_count_label = "Rata-rata Ya" if consensus_selected else "Ya"
+    yes_count_display = [
+        f"{item['ya']:.2f}" if consensus_selected else str(item['ya'])
+        for item in cap_list
+    ]
 
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
     c_k1, c_k2, c_k3, c_k4, c_k5 = st.columns(5)
@@ -1976,7 +1984,7 @@ elif "4. Capability" in menu:
         <div class="kpi-card kpi-card-cobit">
             <div class="kpi-title">APO12 — Risk</div>
             <div class="kpi-value">{cap_list[0]['pct']:.1f}%</div>
-            <div class="kpi-desc">Level {cap_list[0]['as_is']} &bull; {cap_list[0]['ya']}/{cap_list[0]['total']} Ya</div>
+            <div class="kpi-desc">Level {cap_list[0]['as_is']} &bull; {yes_count_display[0]}/{cap_list[0]['total']} {yes_count_label}</div>
         </div>
         """, unsafe_allow_html=True)
     with c_k2:
@@ -1984,7 +1992,7 @@ elif "4. Capability" in menu:
         <div class="kpi-card kpi-card-cobit">
             <div class="kpi-title">APO13 — Security</div>
             <div class="kpi-value">{cap_list[1]['pct']:.1f}%</div>
-            <div class="kpi-desc">Level {cap_list[1]['as_is']} &bull; {cap_list[1]['ya']}/{cap_list[1]['total']} Ya</div>
+            <div class="kpi-desc">Level {cap_list[1]['as_is']} &bull; {yes_count_display[1]}/{cap_list[1]['total']} {yes_count_label}</div>
         </div>
         """, unsafe_allow_html=True)
     with c_k3:
@@ -1992,7 +2000,7 @@ elif "4. Capability" in menu:
         <div class="kpi-card kpi-card-cobit">
             <div class="kpi-title">DSS05 — Services</div>
             <div class="kpi-value">{cap_list[2]['pct']:.1f}%</div>
-            <div class="kpi-desc">Level {cap_list[2]['as_is']} &bull; {cap_list[2]['ya']}/{cap_list[2]['total']} Ya</div>
+            <div class="kpi-desc">Level {cap_list[2]['as_is']} &bull; {yes_count_display[2]}/{cap_list[2]['total']} {yes_count_label}</div>
         </div>
         """, unsafe_allow_html=True)
     with c_k4:
@@ -2000,7 +2008,7 @@ elif "4. Capability" in menu:
         <div class="kpi-card kpi-card-cobit">
             <div class="kpi-title">MEA03 — Compliance</div>
             <div class="kpi-value">{cap_list[3]['pct']:.1f}%</div>
-            <div class="kpi-desc">Level {cap_list[3]['as_is']} &bull; {cap_list[3]['ya']}/{cap_list[3]['total']} Ya</div>
+            <div class="kpi-desc">Level {cap_list[3]['as_is']} &bull; {yes_count_display[3]}/{cap_list[3]['total']} {yes_count_label}</div>
         </div>
         """, unsafe_allow_html=True)
     with c_k5:
@@ -2061,15 +2069,19 @@ elif "4. Capability" in menu:
     # REKOMENDASI PERBAIKAN BERDASARKAN TEMUAN CHECKLIST
     # ========================================================
     with st.expander(" Rekomendasi Strategis Berdasarkan Temuan Gap Wawancara 2", expanded=True):
-        st.markdown("""
-        <div style="font-size:0.85rem; color:#1E293B; line-height:1.6;">
-            <b>Rekomendasi Berdasarkan Analisis Temuan Lapangan:</b><br>
-            • <b>APO12 (Managed Risk — 8.00% / Level 0):</b> Institusi belum memiliki Register Risiko TI formal dan metodologi asesmen risiko berkala. Disarankan menyusun panduan manajemen risiko TI dan menetapkan batas toleransi risiko institusi.<br>
-            • <b>APO13 (Managed Security — 42.00% / Level 1):</b> Perlu memformalkan dokumen Kebijakan Sistem Manajemen Keamanan Informasi (SMKI), menunjuk Tim Tanggap Insiden Keamanan Siber (CSIRT), serta mengadakan sosialisasi berkala mengenai keamanan data bagi civitas akademika.<br>
-            • <b>DSS05 (Security Services — 75.00% / Level 2):</b> Sebagian besar kontrol malware dan pengamanan endpoint telah berjalan baik. Perlu ditingkatkan peninjauan rutin hak akses istimewa pimpinan/staf (access privilege review) dan monitoring log audit berkala.<br>
-            • <b>MEA03 (Managed Compliance — 31.00% / Level 1):</b> Disarankan membentuk matriks kepatuhan terpadu untuk memastikan keselarasan operasional TI terhadap regulasi eksternal (UU Pelindungan Data Pribadi / PDP dan standar akreditasi BAN-PT/Kemendikbudristek).
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("**Rekomendasi berdasarkan hasil perhitungan checklist saat ini:**")
+        recommendation_text = {
+            "APO12": "Formalkan kebijakan manajemen risiko TI, susun register risiko, dan tetapkan jadwal asesmen risiko berkala.",
+            "APO13": "Formalkan kebijakan Sistem Manajemen Keamanan Informasi, tetapkan tim penanganan insiden, dan lakukan sosialisasi keamanan secara berkala.",
+            "DSS05": "Perkuat SOP pengamanan layanan TI, tinjau hak akses secara rutin, dan pantau log keamanan secara berkala.",
+            "MEA03": "Susun matriks kepatuhan terpadu dan dokumentasikan pemenuhan persyaratan eksternal yang berlaku.",
+        }
+        for item in cap_list:
+            st.markdown(
+                f"- **{item['domain_code']} ({item['pct']:.2f}% / Level {item['as_is']} / "
+                f"{item['rating'].split(' - ')[0]}):** "
+                f"{recommendation_text[item['domain_code']]}"
+            )
 
     # ========================================================
     # VISUALISASI GRAFIK
@@ -2164,7 +2176,7 @@ elif "4. Capability" in menu:
     df_cap_display = pd.DataFrame([
         {
             "Domain Evaluasi": item['domain'],
-            "Butir Terpenuhi": f"{item['ya']} / {item['total']}",
+            yes_count_label: f"{yes_count_display[index]} / {item['total']}",
             "Pencapaian (%)": f"{item['pct']:.2f}%",
             "Level As-Is": f"Level {item['as_is']}",
             "Target To-Be": f"Level {item['to_be']}",

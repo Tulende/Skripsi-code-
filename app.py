@@ -1683,7 +1683,7 @@ elif "2. Rekapitulasi" in menu:
         st.markdown("<h3 style='font-size:1.05rem; font-weight:700; color:#0F172A; margin-bottom:10px;'> Tabel Skor Domain — Design Factor Map</h3>", unsafe_allow_html=True)
         df_map_table = pd.DataFrame([
             {
-                "Prioritas": ["1","2","3",][i],
+                "Prioritas": str(i + 1),
                 "Domain": dom,
                 "Nama Domain": DOMAINS[dom],
                 "Skor Total (Raw)": domain_scores[dom],

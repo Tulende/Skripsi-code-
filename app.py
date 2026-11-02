@@ -1498,166 +1498,75 @@ elif "2. Rekapitulasi" in menu:
         st.markdown("""
         <div style="background:linear-gradient(135deg,#1E3A8A,#0284C7); border-radius:14px; padding:18px 22px; margin-bottom:18px;">
             <h2 style="margin:0; color:#FFFFFF; font-size:1.2rem; font-weight:800;"> Design Factor Map — Skor Domain Prioritas COBIT 2019</h2>
-            <p style="margin:6px 0 0 0; color:#BAE6FD; font-size:0.85rem;">Kalkulasi otomatis bobot kontribusi setiap Design Factor terhadap 4 domain prioritas UNKLAB (sesuai tabel resmi ISACA)</p>
+            <p style="margin:6px 0 0 0; color:#BAE6FD; font-size:0.85rem;">Perhitungan mengikuti bobot, baseline, correction factor, dan pembulatan pada COBIT 2019 Design Toolkit untuk empat domain fokus penelitian</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # ─── Ambil hasil DF dari session state ───
+        # Hasil dan peta kontribusi mengikuti formula Design Toolkit pada workbook.
         df_results = st.session_state.calculated_results
+        DOMAINS = {"APO12": "Managed Risk", "APO13": "Managed Security", "DSS05": "Managed Security Services", "MEA03": "Managed Compliance"}
 
-        # ─── Ambil nilai dominan per DF ───
-        df1_rows = df_results.get("DF1", [])
-        df1_scores = {r["indicator"]: r["final"] for r in df1_rows if r["final"] is not None}
-
-        df2_avg = np.mean([r["final"] for r in df_results.get("DF2",[]) if r["final"] is not None]) if df_results.get("DF2") else 0
-        df3_ratings = {r["indicator"]: (r["final"] if r["final"] else 0) for r in df_results.get("DF3", [])}
-        df4_vals = {r["indicator"]: (r["final"] if r["final"] else 0) for r in df_results.get("DF4", [])}
-
-        df5_rows = df_results.get("DF5", [])
-        df5_high   = next((r["final"] for r in df5_rows if "High" in r["indicator"]), 0) or 0
-        df5_normal = next((r["final"] for r in df5_rows if "Normal" in r["indicator"]), 0) or 0
-
-        df6_rows = df_results.get("DF6", [])
-        df6_high   = next((r["final"] for r in df6_rows if "High" in r["indicator"]), 0) or 0
-        df6_normal = next((r["final"] for r in df6_rows if "Normal" in r["indicator"]), 0) or 0
-        df6_low    = next((r["final"] for r in df6_rows if "Low" in r["indicator"]), 0) or 0
-
-        df7_rows = df_results.get("DF7", [])
-        df7_support    = next((r["final"] for r in df7_rows if "Support" in r["indicator"]), 0) or 0
-        df7_factory    = next((r["final"] for r in df7_rows if "Factory" in r["indicator"]), 0) or 0
-        df7_turnaround = next((r["final"] for r in df7_rows if "Turnaround" in r["indicator"]), 0) or 0
-        df7_strategic  = next((r["final"] for r in df7_rows if "Strategic" in r["indicator"]), 0) or 0
-
-        df8_rows = df_results.get("DF8", [])
-        df8_out  = next((r["final"] for r in df8_rows if "Outsourc" in r["indicator"] or "out" in r["indicator"].lower()), 0) or 0
-        df8_cloud= next((r["final"] for r in df8_rows if "Cloud" in r["indicator"]), 0) or 0
-        df8_in   = next((r["final"] for r in df8_rows if "In-sourced" in r["indicator"] or "nsourc" in r["indicator"]), 0) or 0
-
-        df9_rows = df_results.get("DF9", [])
-        df9_agile = next((r["final"] for r in df9_rows if "Agile" in r["indicator"]), 0) or 0
-        df9_devops= next((r["final"] for r in df9_rows if "DevOps" in r["indicator"]), 0) or 0
-        df9_trad  = next((r["final"] for r in df9_rows if "Traditional" in r["indicator"] or "Waterfall" in r["indicator"]), 0) or 0
-
-        df10_rows = df_results.get("DF10", [])
-        df10_first  = next((r["final"] for r in df10_rows if "First" in r["indicator"]), 0) or 0
-        df10_follow = next((r["final"] for r in df10_rows if "Follower" in r["indicator"]), 0) or 0
-        df10_slow   = next((r["final"] for r in df10_rows if "Slow" in r["indicator"]), 0) or 0
-
-        DOMAINS = {
-            "APO12": "Managed Risk",
-            "APO13": "Managed Security",
-            "DSS05": "Managed Security Services",
-            "MEA03": "Managed Compliance"
+        # Peta bobot dari sheet DF1map–DF10map. DF2 merupakan komposisi peta EG→AG→GMO.
+        toolkit_weights = {
+            "DF1": {"APO12":[1,1.5,1,2.5],"APO13":[1,1,1,2.5],"DSS05":[1,1,1,2.5],"MEA03":[1,1,1,1]},
+            "DF2": {"APO12":[0,6,0,0,0,6,0,0,0,0,0,0,0],"APO13":[0,5,2,0,0,5,0,0,0,0,1,0,0],"DSS05":[2,8,4,0,1,7,0,1,0,0,3,1,0],"MEA03":[0,3,6,0,0,0,0,0,0,0,4,0,0]},
+            "DF3": {"APO12":[0,0,0,0,0,0,3,0,0,2,3,0,0,0,0,2,0,0,0],"APO13":[0,0,0,0,0,0,4,0,0,0,4,0,3,0,0,0,0,0,0],"DSS05":[0,0,0,0,0,3,4,0,2,0,4,0,3,0,3,2,0,0,3],"MEA03":[0,1,0,0,0,1,2,0,0,0,3,2,4,2,0,0,0,0,2]},
+            "DF4": {"APO12":[1,.5,2.5,1.5,2,2,1,1,.5,1,1,1,1,1,1,2,1,1.5,2.5,1],"APO13":[0,0,3.5,1,2,1,0,1,0,.5,0,0,0,0,0,1.5,2,1,2,1],"DSS05":[0,0,4,2,2,0,0,0,0,0,0,0,0,0,0,1.5,1,2,2,0],"MEA03":[0,0,2,2,4,.5,0,0,0,0,0,0,0,0,0,2,0,0,4,0]},
+            "DF5": {"APO12":[4,1],"APO13":[4,1],"DSS05":[3,1],"MEA03":[3,1]},
+            "DF6": {"APO12":[4,2,1],"APO13":[1.5,1,1],"DSS05":[2,1,1],"MEA03":[4,2,1]},
+            "DF7": {"APO12":[1,2.5,1,3],"APO13":[1,2,1.5,3],"DSS05":[1.5,2.5,1.5,3.5],"MEA03":[1,1,1,1.5]},
+            "DF8": {"APO12":[2,2,1],"APO13":[1,1,1],"DSS05":[1,1,1],"MEA03":[1,1,1]},
+            "DF9": {"APO12":[1,1.5,1],"APO13":[1,1,1],"DSS05":[1,1,1],"MEA03":[1,1,1]},
+            "DF10":{"APO12":[2,1.5,1],"APO13":[1,1,1],"DSS05":[1.5,1,1],"MEA03":[1,1,1]},
         }
+        toolkit_baselines = {"DF1":[3]*4,"DF2":[3]*13,"DF3":[9]*19,"DF4":[2]*20,"DF5":[.33,.67],"DF6":[0,1,0],"DF7":[3]*4,"DF8":[.33,.33,.34],"DF9":[.15,.10,.75],"DF10":[.15,.70,.15]}
 
-        DF1_CATS = ["Growth / Acquisition", "Innovation / Differentiation", "Cost Leadership", "Client Service / Stability"]
-        DF1_W = {
-            "APO12": [1.0, 1.5, 1.0, 2.5],
-            "APO13": [1.0, 1.0, 1.0, 2.5],
-            "DSS05": [1.0, 1.0, 1.0, 2.5],
-            "MEA03": [1.0, 1.0, 1.0, 1.0],
+        def toolkit_number(row, df_code):
+            # Persentase pada Toolkit boleh pecahan (mis. 2,5%); skor fuzzy memakai nilai bulat Toolkit.
+            value = row.get("final") if df_code in {"DF5", "DF6", "DF8", "DF9", "DF10"} else row.get("rounded_toolkit", "-")
+            if value in (None, "-"):
+                value = row.get("final")
+            try:
+                return float(str(value).replace("%", "").replace(",", ".")) if value is not None else None
+            except (TypeError, ValueError):
+                return None
+
+        def excel_mround(value, multiple=5):
+            sign = -1 if value < 0 else 1
+            multiple = abs(multiple)
+            return sign * int(abs(value) / multiple + 0.5) * multiple
+
+        def toolkit_delta(df_code, domain):
+            values = [toolkit_number(row, df_code) for row in df_results.get(df_code, [])]
+            baseline = toolkit_baselines[df_code]
+            if len(values) != len(baseline) or any(value is None for value in values):
+                return 0.0
+            # Form menyimpan persen 0–100, sedangkan workbook memakai proporsi 0–1.
+            if df_code in {"DF5", "DF6", "DF8", "DF9", "DF10"}:
+                values = [value / 100 for value in values]
+            # Urutan pilihan pada form DF8: insourced, outsourcing, cloud.
+            if df_code == "DF8":
+                values = [values[1], values[2], values[0]]
+            weights = toolkit_weights[df_code][domain]
+            current_score = sum(value * weight for value, weight in zip(values, weights))
+            baseline_score = sum(value * weight for value, weight in zip(baseline, weights))
+            if baseline_score <= 0:
+                return 0.0
+            adjusted_pct = 100 * current_score / baseline_score
+            if df_code in {"DF1", "DF2", "DF3", "DF4", "DF7"}:
+                avg_current = sum(values) / len(values)
+                correction = (sum(baseline) / len(baseline)) / avg_current if avg_current else 0
+                adjusted_pct *= correction
+            return float(excel_mround(adjusted_pct, 5) - 100)
+
+        domain_scores = {domain: sum(toolkit_delta(f"DF{i}", domain) for i in range(1, 11)) for domain in DOMAINS}
+        max_score = max(domain_scores.values()) if domain_scores else 0
+        domain_scores_pct = {
+            domain: float(excel_mround(int(100 * score / max_score), 5 if score > 0 else -5)) if max_score > 0 else 0.0
+            for domain, score in domain_scores.items()
         }
-
-        DF3_ITEMS = ["IT Investment Decision Making", "Program & Project Life Cycle", "IT Cost & Oversight",
-                     "IT Expertise & Skills", "Enterprise/IT Architecture", "IT Infrastructure Incidents",
-                     "Unauthorized Actions", "Software Adoption Problems", "Hardware Incidents",
-                     "Software Failures", "Logical Attacks (Hacking/Malware)", "Third-Party / Supplier Incidents",
-                     "Noncompliance", "Geopolitical Issues", "Industrial Action", "Acts of Nature",
-                     "Technology-Based Innovation", "Environmental", "Data & Information Management"]
-        DF3_W = {
-            "APO12": [0,0,0,0,0,0,3,0,0,2,3,0,0,0,0,2,0,0,0],
-            "APO13": [0,0,0,0,0,0,4,0,0,0,4,0,3,0,0,0,0,0,0],
-            "DSS05": [0,0,0,0,0,3,4,0,2,0,4,0,3,0,3,2,0,0,3],
-            "MEA03": [0,1,0,0,0,1,2,0,0,0,3,2,4,2,0,0,0,0,2],
-        }
-
-        DF4_ITEMS = ["Frustration antara entitas TI", "Frustration antara dept bisnis & TI",
-                     "Insiden TI serius (kehilangan data, keamanan)", "Masalah pengiriman layanan outsourcer",
-                     "Kegagalan memenuhi regulasi TI", "Temuan audit kinerja TI buruk",
-                     "Pengeluaran TI tidak resmi / tersembunyi", "Duplikasi & tumpang tindih inisiatif TI",
-                     "SDM TI tidak mencukupi / kurang keahlian", "Perubahan TI gagal memenuhi bisnis",
-                     "Eksekutif enggan terlibat keputusan TI", "Model operasi TI terlalu rumit",
-                     "Biaya TI dinilai terlalu tinggi", "Arsitektur TI menghambat inisiatif baru",
-                     "Kesenjangan pengetahuan bisnis & teknis", "Masalah kualitas & integrasi data",
-                     "End-user computing tinggi tanpa pengawasan", "Dept bisnis bangun solusi TI sendiri",
-                     "Pengabaian regulasi privasi", "Ketidakmampuan manfaatkan teknologi baru"]
-        DF4_W = {
-            "APO12": [1,0.5,2.5,1.5,2,2,1,1,0.5,1,1,1,1,1,1,2,1,1.5,2.5,1],
-            "APO13": [0,0,3.5,1,2,1,0,1,0,0.5,0,0,0,0,0,1.5,2,1,2,1],
-            "DSS05": [0,0,4,2,2,0,0,0,0,0,0,0,0,0,0,1.5,1,2,2,0],
-            "MEA03": [0,0,2,2,4,0.5,0,0,0,0,0,0,0,0,0,2,0,0,4,0],
-        }
-
-        DF5_W = {"APO12": [4,1], "APO13": [4,1], "DSS05": [3,1], "MEA03": [3,1]}
-        DF6_W = {"APO12": [4,2,1], "APO13": [1.5,1,1], "DSS05": [2,1,1], "MEA03": [4,2,1]}
-        DF7_W = {"APO12": [1,2.5,1,3], "APO13": [1,2,1.5,3], "DSS05": [1.5,2.5,1.5,3.5], "MEA03": [1,1,1,1.5]}
-        DF8_W = {"APO12": [2,2,1], "APO13": [1,1,1], "DSS05": [1,1,1], "MEA03": [1,1,1]}
-        DF9_W = {"APO12": [1,1.5,1], "APO13": [1,1,1], "DSS05": [1,1,1], "MEA03": [1,1,1]}
-        DF10_W = {"APO12": [2,1.5,1], "APO13": [1,1,1], "DSS05": [1.5,1,1], "MEA03": [1,1,1]}
-
-        def calc_df_map_score(domain):
-            score = 0.0
-
-            if df1_scores:
-                dom_cat = max(df1_scores, key=df1_scores.get)
-                matched_idx = 0
-                for ci, cat in enumerate(DF1_CATS):
-                    if any(w.lower() in dom_cat.lower() for w in cat.split()[:2]):
-                        matched_idx = ci
-                        break
-                score += DF1_W[domain][matched_idx]
-
-            df2_norm = (df2_avg - 1) / 4.0 if df2_avg > 1 else 0
-            df2_domain_max = {"APO12": 4, "APO13": 3, "DSS05": 4, "MEA03": 3}
-            score += round(df2_norm * df2_domain_max.get(domain, 2), 2)
-
-            for i, item_name in enumerate(DF3_ITEMS):
-                w = DF3_W[domain][i]
-                if w == 0:
-                    continue
-                matched_rating = 0
-                for key, val in df3_ratings.items():
-                    if any(kw.lower() in key.lower() for kw in item_name.split()[:2]):
-                        matched_rating = val
-                        break
-                score += round((matched_rating / 25.0) * w, 4)
-
-            for i, item_name in enumerate(DF4_ITEMS):
-                w = DF4_W[domain][i]
-                if w == 0:
-                    continue
-                matched_val = 0
-                for key, val in df4_vals.items():
-                    if any(kw.lower() in key.lower() for kw in item_name.split()[:3]):
-                        matched_val = val
-                        break
-                norm = (matched_val - 1) / 2.0 if matched_val > 1 else 0
-                score += round(norm * w, 4)
-
-            df5_pct_norm = [df5_high/100.0, df5_normal/100.0]
-            score += sum(df5_pct_norm[i] * DF5_W[domain][i] for i in range(2))
-
-            df6_pct_norm = [df6_high/100.0, df6_normal/100.0, df6_low/100.0]
-            score += sum(df6_pct_norm[i] * DF6_W[domain][i] for i in range(3))
-
-            df7_vals_norm = [(v-1)/4.0 if v and v > 1 else 0 for v in [df7_support, df7_factory, df7_turnaround, df7_strategic]]
-            score += sum(df7_vals_norm[i] * DF7_W[domain][i] for i in range(4))
-
-            df8_pct_norm = [df8_out/100.0, df8_cloud/100.0, df8_in/100.0]
-            score += sum(df8_pct_norm[i] * DF8_W[domain][i] for i in range(3))
-
-            df9_pct_norm = [df9_agile/100.0, df9_devops/100.0, df9_trad/100.0]
-            score += sum(df9_pct_norm[i] * DF9_W[domain][i] for i in range(3))
-
-            df10_pct_norm = [df10_first/100.0, df10_follow/100.0, df10_slow/100.0]
-            score += sum(df10_pct_norm[i] * DF10_W[domain][i] for i in range(3))
-
-            return round(score, 2)
-
-        domain_scores = {d: calc_df_map_score(d) for d in DOMAINS}
-        max_score = max(domain_scores.values()) if domain_scores and max(domain_scores.values()) > 0 else 1
-        domain_scores_pct = {d: round((s / max_score) * 100, 1) for d, s in domain_scores.items()}
-        ranked = sorted(domain_scores_pct.items(), key=lambda x: x[1], reverse=True)
+        # Pertahankan urutan Canvas jika skor relatif sama.
+        ranked = sorted(domain_scores_pct.items(), key=lambda item: item[1], reverse=True)
 
         dcols = st.columns(4)
         domain_colors = {

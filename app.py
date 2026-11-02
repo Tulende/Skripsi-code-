@@ -1861,21 +1861,32 @@ elif "4. Capability" in menu:
 
     if "Integrasi Otomatis" in cap_mode:
         all_chk_resps = get_all_checklist_submitted_respondents()
+        complete_chk_resps = [
+            respondent for respondent in all_chk_resps
+            if respondent["q_count"] >= checklist_level2_total
+        ]
+        if not complete_chk_resps:
+            st.warning(
+                f"Belum ada responden yang menyelesaikan seluruh checklist Level 2 "
+                f"({checklist_level2_total} pertanyaan). Lengkapi Wawancara 2 terlebih dahulu."
+            )
+            st.stop()
+
         resp_options = ["Konsensus Gabungan (Rata-rata Responden)"]
-        if all_chk_resps:
-            resp_options += [f"{r['fullname']} ({r['username']}) - {r['q_count']} butir" for r in all_chk_resps]
+        respondent_ids_by_option = {}
+        for respondent in complete_chk_resps:
+            option = f"{respondent['fullname']} ({respondent['username']}) - {respondent['q_count']} butir"
+            resp_options.append(option)
+            respondent_ids_by_option[option] = respondent["user_id"]
         sel_chk_source = st.selectbox("Pilih Sumber Jawaban Responden:", resp_options)
 
         # Hitung skor berdasarkan sumber yang dipilih
         if "Konsensus" in sel_chk_source:
-            # Ambil jawaban responden1 & responden2
-            conn = get_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT id, username FROM users WHERE username IN ('responden1', 'responden2')")
-            u_rows = cur.fetchall()
-            conn.close()
-            
-            all_u_answers = [get_user_checklist_answers(uid) for uid, _ in u_rows]
+            # Gunakan seluruh responden yang checklist Level 2-nya lengkap.
+            all_u_answers = [
+                get_user_checklist_answers(respondent["user_id"])
+                for respondent in complete_chk_resps
+            ]
             selected_evidence_answers = all_u_answers[0] if all_u_answers else {}
             
             for d_code in ["APO12", "APO13", "DSS05", "MEA03"]:
@@ -1903,14 +1914,7 @@ elif "4. Capability" in menu:
                 }
         else:
             # Responden spesifik
-            target_username = sel_chk_source.split("(")[1].split(")")[0].strip()
-            conn = get_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE username = %s", (target_username,))
-            r_row = cur.fetchone()
-            conn.close()
-            
-            target_uid = r_row[0] if r_row else None
+            target_uid = respondent_ids_by_option.get(sel_chk_source)
             user_chk_ans = get_user_checklist_answers(target_uid) if target_uid else {}
             selected_evidence_answers = user_chk_ans
             

@@ -2183,7 +2183,7 @@ elif "4. Capability" in menu:
             "Gap (Level)": f"{item['gap']} Level",
             "COBIT Rating Scale": item['rating']
         }
-        for item in cap_list
+        for index, item in enumerate(cap_list)
     ])
     st.dataframe(df_cap_display, use_container_width=True)
     

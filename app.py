@@ -537,14 +537,9 @@ if "calculated_results" not in st.session_state:
 if not st.session_state.authenticated:
     st.markdown("""
     <div class="cobit-hero-header" style="text-align: center; margin-top: 10px;">
-        <div class="cobit-badge-ribbon" style="justify-content: center;">
-            <span> ISACA COBIT 2019 & FUZZY LOGIC ENGINE</span>
-        </div>
         <h1 class="cobit-title">Sistem Evaluasi Tata Kelola TI</h1>
         <p class="cobit-subtitle" style="justify-content: center;">
             <span>Universitas Klabat (UNKLAB)</span>
-            <span>•</span>
-            <span>Design Factors DF1–DF10</span>
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -558,12 +553,11 @@ if not st.session_state.authenticated:
                 <div style="background: linear-gradient(135deg, #1E3A8A, #0284C7); width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8rem; font-weight:700;">IT</div>
                 <div>
                     <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#0F172A;">Portal Akses Auditor</h3>
-                    <p style="margin:0; font-size:0.8rem; color:#64748B;">Autentikasi terpusat berbasis Role-Based Access Control</p>
                 </div>
             </div>
         """, unsafe_allow_html=True)
         
-        tab_login, tab_register = st.tabs([" Masuk (Sign In)", " Daftar Akun Baru"])
+        tab_login, tab_register = st.tabs(["Akses Akun", "Daftar Akun"])
         
         with tab_login:
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
@@ -571,7 +565,7 @@ if not st.session_state.authenticated:
             login_pass = st.text_input("Password:", type="password", placeholder="••••••••", key="login_password")
             
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            if st.button("Masuk ke Sistem Audit", type="primary", use_container_width=True):
+            if st.button("Lanjutkan", type="primary", use_container_width=True):
                 if not login_user or not login_pass:
                     st.error("Harap isi username dan password lengkap.")
                 else:
@@ -582,14 +576,6 @@ if not st.session_state.authenticated:
                         st.rerun()
                     else:
                         st.error("Kredensial tidak valid! Periksa kembali username dan password Anda.")
-
-            st.markdown("""
-            <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px; margin-top:14px; font-size:0.75rem; color:#0369A1; line-height:1.5;">
-                <b> Akun Bawaan Sistem (Langsung Pakai):</b><br>
-                • <b>Admin:</b> Username: <code>admin1</code> atau <code>admin</code> | Password: <code>admin123</code><br>
-                • <b>Responden:</b> Username: <code>responden1</code> | Password: <code>responden123</code>
-            </div>
-            """, unsafe_allow_html=True)
 
         with tab_register:
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
@@ -613,17 +599,11 @@ if not st.session_state.authenticated:
                 else:
                     ok, msg = register_user(reg_user, reg_name, reg_pos, reg_role, reg_pass1)
                     if ok:
-                        st.success(f"{msg} Silakan buka tab 'Masuk' untuk login.")
+                        st.success(msg)
                     else:
                         st.error(msg)
                         
         st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div style="text-align: center; color: #64748B; font-size: 0.75rem; margin-top: 8px;">
-            <span>Enkripsi Kata Sandi SHA-256</span> • <span>Algoritma Agregasi TFN Defuzzifikasi</span>
-        </div>
-        """, unsafe_allow_html=True)
         
     st.stop()
 
@@ -705,20 +685,6 @@ else:
             <b> Wawancara 2 (Checklist):</b><br>Level 2 terisi {chk_count}/{checklist_level2_total} Butir
         </div>
         """, unsafe_allow_html=True)
-
-st.sidebar.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-
-st.sidebar.markdown("""
-<div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px 16px; font-size:0.76rem; color:#475569; box-shadow: 0 2px 8px -2px rgba(15,23,42,0.05);">
-    <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-        <strong style="color:#0F172A; font-size:0.82rem;">Landasan Kerangka Kerja:</strong>
-    </div>
-    <div style="line-height:1.6;">
-        • <b>COBIT 2019:</b> 10 Design Factors & 4 Domain Prioritas UNKLAB (<code>APO12</code>, <code>APO13</code>, <code>DSS05</code>, <code>MEA03</code>).<br>
-        • <b>Fuzzy Logic:</b> Triangular Fuzzy Number (TFN) & Defuzzifikasi $z^*$.
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
 if st.sidebar.button(" Keluar dari Sesi Audit", use_container_width=True):

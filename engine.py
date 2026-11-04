@@ -1,5 +1,4 @@
 import hashlib
-import io
 import os
 import sqlite3
 import tomllib
@@ -9,10 +8,6 @@ import psycopg
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 
 DB_FILE = os.path.abspath(os.path.expanduser(
     os.environ.get("COBIT_DB_PATH", os.path.join("~", "cobit2019_unklab.db"))
@@ -781,136 +776,3 @@ def get_rating_level_cobit(pct):
         rating = "F - Fully Achieved (85-100%)"
     attained_level = 2 if pct >= 85 else 1
     return rating, attained_level
-
-def generate_pdf_report(evaluator_name, evaluator_pos, capability_data_list):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-    story = []
-    
-    styles = getSampleStyleSheet()
-    
-    cobit_navy = colors.HexColor('#0B192C')
-    cobit_blue = colors.HexColor('#1E3A8A')
-    cobit_gold = colors.HexColor('#D97706')
-    slate_bg = colors.HexColor('#F8FAFC')
-    border_grey = colors.HexColor('#CBD5E1')
-    
-    title_style = ParagraphStyle(
-        'CobitTitle', 
-        parent=styles['Heading1'], 
-        fontSize=15, 
-        alignment=1, 
-        textColor=cobit_navy,
-        fontName='Helvetica-Bold',
-        spaceAfter=4
-    )
-    subtitle_style = ParagraphStyle(
-        'CobitSubtitle', 
-        parent=styles['Normal'], 
-        alignment=1, 
-        fontSize=10.5, 
-        textColor=cobit_blue,
-        fontName='Helvetica-Bold',
-        spaceAfter=14
-    )
-    section_heading = ParagraphStyle(
-        'SectionHeading', 
-        parent=styles['Heading2'], 
-        fontSize=10, 
-        textColor=cobit_navy, 
-        fontName='Helvetica-Bold',
-        spaceBefore=10,
-        spaceAfter=6
-    )
-    normal_style = ParagraphStyle(
-        'NormalStyle',
-        parent=styles['Normal'],
-        fontSize=8.5,
-        leading=12,
-        textColor=colors.HexColor('#1E293B')
-    )
-    
-    story.append(Paragraph("LAPORAN RESMI AUDIT TATA KELOLA TEKNOLOGI INFORMASI", title_style))
-    story.append(Paragraph("ISACA COBIT 2019 & FUZZY MULTI-CRITERIA &bull; UNIVERSITAS KLABAT", subtitle_style))
-    story.append(Spacer(1, 4))
-    
-    info_data = [
-        ["Lead Evaluator / Auditor:", evaluator_name, "Tanggal Dokumen:", datetime.now().strftime("%d %B %Y, %H:%M WITA")],
-        ["Jabatan / Unit Kerja:", evaluator_pos, "Metodologi:", "Triangular Fuzzy Number (TFN) & Agregasi Langsung"]
-    ]
-    t_info = Table(info_data, colWidths=[120, 160, 100, 160])
-    t_info.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), slate_bg),
-        ('GRID', (0,0), (-1,-1), 0.5, border_grey),
-        ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
-        ('FONTNAME', (2,0), (2,-1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,0), (-1,-1), 8),
-        ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor('#0F172A')),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    story.append(t_info)
-    story.append(Spacer(1, 12))
-    
-    story.append(Paragraph("<b>I. Evaluasi Tingkat Kemampuan (Capability Level) & Analisis Kesenjangan (Gap)</b>", section_heading))
-    table_headers = [["Domain Prioritas", "Level As-Is", "Target To-Be", "Gap", "% Capaian", "Rating Scale COBIT"]]
-    
-    for item in capability_data_list:
-        table_headers.append([
-            item['domain'], 
-            f"Level {item['as_is']}", 
-            f"Level {item['to_be']}", 
-            f"{item['gap']} Level", 
-            f"{item['pct']:.1f}%", 
-            item['rating']
-        ])
-        
-    t_cap = Table(table_headers, colWidths=[160, 65, 65, 60, 75, 115])
-    t_cap.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), cobit_navy),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('ALIGN', (0,1), (0,-1), 'LEFT'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,0), (-1,-1), 7.5),
-        ('GRID', (0,0), (-1,-1), 0.5, border_grey),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, slate_bg]),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    story.append(t_cap)
-    story.append(Spacer(1, 14))
-    
-    story.append(Paragraph("<b>II. Rekomendasi Strategis Perbaikan Tata Kelola TI:</b>", section_heading))
-    recoms = [
-        "1. <b>APO12 (Managed Risk):</b> Memformalkan dokumen Kebijakan Manajemen Risiko TI dan menyusun Register Risiko berkala di lingkungan Universitas Klabat.",
-        "2. <b>APO13 (Managed Security):</b> Mengembangkan Kebijakan Sistem Manajemen Keamanan Informasi (SMKI) dan menetapkan tim tanggap insiden siber kampus.",
-        "3. <b>DSS05 (Security Services):</b> Menetapkan SOP penanganan akses dan kerahasiaan data mahasiswa/dosen serta melaksanakan audit log secara periodik.",
-        "4. <b>MEA03 (Managed Compliance):</b> Membentuk matriks kepatuhan terpadu untuk memastikan keselarasan terhadap regulasi Kemendikbudristek dan UU PDP."
-    ]
-    for rec in recoms:
-        story.append(Paragraph(rec, normal_style))
-        story.append(Spacer(1, 4))
-        
-    story.append(Spacer(1, 18))
-    
-    # Signature / Legal Block
-    sig_data = [
-        ["Diverifikasi oleh:", "Disetujui oleh:"],
-        ["\n\n\n__________________________", "\n\n\n__________________________"],
-        [f"<b>{evaluator_name}</b>", "<b>Pimpinan / Direktur SIU UNKLAB</b>"],
-        [evaluator_pos, "Universitas Klabat"]
-    ]
-    t_sig = Table(sig_data, colWidths=[270, 270])
-    t_sig.setStyle(TableStyle([
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTSIZE', (0,0), (-1,-1), 8),
-        ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor('#334155')),
-        ('TOPPADDING', (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-    ]))
-    story.append(t_sig)
-        
-    doc.build(story)
-    buffer.seek(0)
-    return buffer

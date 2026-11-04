@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
 
 # Mengimpor modul dari engine.py
 from engine import (
@@ -11,7 +10,7 @@ from engine import (
     calc_fuzzy_5, calc_fuzzy_3, calc_percentage_avg, calc_risk_profile,
     save_individual_answers, get_user_submission_status, get_user_saved_answers,
     get_all_submitted_respondents, aggregate_two_respondents,
-    get_rating_level_cobit, generate_pdf_report,
+    get_rating_level_cobit,
     get_checklist_level_questions, save_individual_checklist, get_user_checklist_answers,
     get_user_checklist_status, get_all_checklist_submitted_respondents, get_connection, read_dataframe,
     is_postgres_configured, get_sqlite_backup, format_db_timestamp,
@@ -646,7 +645,7 @@ if is_admin:
             "  1. Pengolahan & Penggabungan Responden (DF1–DF10)",
             "  2. Rekapitulasi & Visualisasi DF",
             "  3. Riwayat Responden & Database",
-            "  4. Capability Level & Export PDF"
+            "  4. Capability Level & Analisis Gap"
         ]
     )
 else:
@@ -1700,24 +1699,19 @@ elif "3. Riwayat" in menu:
             st.dataframe(df_chk_db, use_container_width=True)
 
 # ----------------------------------------------------
-# MODUL 4: CAPABILITY LEVEL & EXPORT PDF
+# MODUL 4: CAPABILITY LEVEL
 # ----------------------------------------------------
 elif "4. Capability" in menu:
     if not is_admin:
-        st.error(" Akses Terbatas: Modul Capability Level & Export PDF hanya dapat diakses oleh Administrator.")
+        st.error(" Akses Terbatas: Modul Capability Level hanya dapat diakses oleh Administrator.")
         st.stop()
         
     st.markdown("""
     <div style="margin-bottom:16px;">
         <h2 style="margin:0; font-size:clamp(1.15rem, 2.5vw, 1.45rem); font-weight:800; color:#0F172A;">Penilaian Capability Level & Analisis Gap</h2>
-        <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Evaluasi 4 domain prioritas Universitas Klabat beserta penerbitan laporan resmi (PDF)</p>
+        <p style="margin:4px 0 0 0; color:#64748B; font-size:0.85rem;">Evaluasi 4 domain prioritas Universitas Klabat</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    with st.expander("Metadata Evaluator / Lead Auditor", expanded=True):
-        col_e1, col_e2 = st.columns(2)
-        eval_name = col_e1.text_input("Nama Lead Evaluator:", value=user_p['fullname'])
-        eval_pos = col_e2.text_input("Jabatan Evaluator:", value=user_p['position'])
     
     st.markdown("""
     <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:16px 18px; margin-bottom:16px;">
@@ -2063,21 +2057,7 @@ elif "4. Capability" in menu:
     st.dataframe(df_cap_display, use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
-    col_btn_db, col_btn_pdf = st.columns(2)
-    
-    with col_btn_db:
-        if st.button(" Simpan Hasil Evaluasi ke Database PostgreSQL", type="secondary", use_container_width=True):
-            for item in cap_list:
-                save_capability_data(item['domain'], item['as_is'], item['to_be'], item['gap'], item['pct'], item['rating'])
-            st.success(" Seluruh data capability level & gap analysis berhasil disimpan ke database PostgreSQL!")
-
-    with col_btn_pdf:
-        pdf_buf = generate_pdf_report(eval_name, eval_pos, cap_list)
-        st.download_button(
-            label=" Unduh Laporan Resmi Audit COBIT 2019 (PDF)",
-            data=pdf_buf, 
-            file_name=f"Laporan_Audit_COBIT2019_UNKLAB_{datetime.now().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf", 
-            type="primary", 
-            use_container_width=True
-        )
+    if st.button("Simpan Hasil Evaluasi ke Database PostgreSQL", type="secondary", use_container_width=True):
+        for item in cap_list:
+            save_capability_data(item['domain'], item['as_is'], item['to_be'], item['gap'], item['pct'], item['rating'])
+        st.success("Seluruh data capability level & gap analysis berhasil disimpan ke database PostgreSQL!")
